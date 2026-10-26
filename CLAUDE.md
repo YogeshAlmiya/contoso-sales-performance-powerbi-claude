@@ -24,7 +24,7 @@ Power BI development for **Contoso**, a fictional electronics retailer selling t
 
 ## Power BI Desktop
 
-- I run Power BI Desktop on this same machine. You can't see or control it.
+- I run Power BI Desktop on this same machine. Work on the PBIP files in this folder; don't connect to my running Desktop instance unless I ask.
 - Build PBIP projects Desktop can open (a `.pbip` file next to its `.SemanticModel` and `.Report` folders).
 - After changing a project I have open, tell me to reload it in Desktop. Don't change it while I'm editing.
 
