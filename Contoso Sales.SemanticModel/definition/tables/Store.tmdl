@@ -1,0 +1,83 @@
+/// Stores, one row per store, including the online store (Country Code ONL, Country Online, Channel Online). The plan joins at Country Code. Source: view model.DimStore.
+table Store
+	lineageTag: c67d0a0c-6cce-4bab-9f4b-0f3e1e1980d5
+
+	/// Store identifier; joins Sales. 999999 is the online store.
+	column 'Store Key'
+		dataType: int64
+		isHidden
+		lineageTag: 16602436-5da2-4f97-b800-dffe4d2d75ed
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+	/// Store name. Restructured stores keep their name, so one name can cover two store rows. Below plan grain: budget and forecast are blank when filtered by store.
+	column 'Store Name'
+		dataType: string
+		lineageTag: bab4b6e5-fa37-432a-8f4e-435efa979a42
+		summarizeBy: none
+		sourceColumn: StoreName
+
+	/// State or region of the store; Online for the online store. Below plan grain.
+	column State
+		dataType: string
+		lineageTag: 3a712090-a3be-4dea-bfbc-03f865dc48ad
+		summarizeBy: none
+		sourceColumn: State
+
+	/// ISO country code of the store; ONL for the online store. The level at which budget and forecast are set; joins the Plan table.
+	column 'Country Code'
+		dataType: string
+		lineageTag: e0f1481c-71e7-4a1f-860d-c159db13a3a7
+		summarizeBy: none
+		sourceColumn: CountryCode
+
+	/// Country name of the store; Online for the online store.
+	column Country
+		dataType: string
+		lineageTag: 421ded82-efa4-4f22-8f2a-0fc7e2bb315e
+		summarizeBy: none
+		sourceColumn: CountryName
+
+	/// Store for physical stores, Online for the online store. Derived from country, so budget and forecast work by channel.
+	column Channel
+		dataType: string
+		lineageTag: 52ca8dee-4d85-40c8-8df7-8eb9a97e24de
+		summarizeBy: none
+		sourceColumn: Channel
+
+	/// Open, Closed or Restructured. Source stores with no status are Closed if their close date is on or before 2025-12-31, otherwise Open.
+	column Status
+		dataType: string
+		lineageTag: 1707959e-6853-478d-8cb5-c6159b51d7a3
+		summarizeBy: none
+		sourceColumn: Status
+
+	/// Channel > Country > State > Store. The plan shows down to country level.
+	hierarchy Geography
+		lineageTag: 53686bff-92e8-4129-b589-599cfbeb955b
+
+		level Channel
+			lineageTag: db2e705f-cfff-405f-b096-6b21bf5e12d7
+			column: Channel
+
+		level Country
+			lineageTag: 623fc045-050c-40f0-8d48-195dff9eaf3c
+			column: Country
+
+		level State
+			lineageTag: 4f74a6fb-bd9a-494a-9fed-a7a81be792f2
+			column: State
+
+		level Store
+			lineageTag: acd6ecde-0e85-4c99-947b-5e6029ea2270
+			column: 'Store Name'
+
+	partition Store = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "DimStore"]}[Data]
+				in
+				    View
+

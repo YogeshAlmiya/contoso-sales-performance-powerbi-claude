@@ -1,0 +1,138 @@
+/// Calendar, one row per day from 2016-01-01 to 2025-12-31 (whole years of sales history). Marked as the model's date table. Source: view model.DimDate.
+table Date
+	lineageTag: de04ec11-92bc-47d1-a880-d8f9cf455afe
+	dataCategory: Time
+
+	/// Integer date key yyyymmdd; joins Sales.
+	column 'Date Key'
+		dataType: int64
+		isHidden
+		lineageTag: 0e0aeb8b-3e76-4055-9058-252498a30706
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	/// Calendar date (order date for sales).
+	column Date
+		dataType: dateTime
+		isUnique
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 010a933c-90f5-4146-9d3f-2b30954e9849
+		summarizeBy: none
+		sourceColumn: Date
+
+	/// Calendar year. 2016 is partial (sales start 2016-05-18); 2025 is the latest complete year.
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 90213a2c-4b59-48c0-a7c7-7472129989d0
+		summarizeBy: none
+		sourceColumn: Year
+
+	/// Quarter of the year, Q1 to Q4.
+	column Quarter
+		dataType: string
+		lineageTag: eae2eaf7-f44c-41cf-bca4-68f955dc1274
+		summarizeBy: none
+		sourceColumn: Quarter
+
+	/// Year and quarter, for example 2025 Q1.
+	column 'Year Quarter'
+		dataType: string
+		lineageTag: 85a63ac1-f196-478c-a626-ae7987e3bfc3
+		summarizeBy: none
+		sourceColumn: YearQuarter
+		sortByColumn: 'Year Quarter Key'
+
+	/// Sort key for Year Quarter (yyyyq).
+	column 'Year Quarter Key'
+		dataType: int64
+		isHidden
+		lineageTag: 954abf50-1b0d-42b8-8936-4e821f851c15
+		summarizeBy: none
+		sourceColumn: YearQuarterKey
+
+	/// Month name, Jan to Dec, without the year.
+	column Month
+		dataType: string
+		lineageTag: e9c3a4a3-bba1-4b3c-86b8-d8dba89b4075
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month Number'
+
+	/// Month of the year, 1 to 12; sorts Month.
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		lineageTag: 43d7c55c-e6e4-403c-82ad-73d77cc3c51d
+		summarizeBy: none
+		sourceColumn: MonthNumber
+
+	/// Year and month, for example Jan 2025. The plan (budget, forecast) is set at this grain.
+	column 'Year Month'
+		dataType: string
+		lineageTag: 7596bafc-fc88-46e7-8ab2-e9554b0e43f2
+		summarizeBy: none
+		sourceColumn: YearMonth
+		sortByColumn: 'Year Month Key'
+
+	/// Month key yyyymm; sorts Year Month and joins the Plan table (many-to-many).
+	column 'Year Month Key'
+		dataType: int64
+		isHidden
+		lineageTag: 0716cc1a-ff78-4032-ac4d-27fe30bc928c
+		summarizeBy: none
+		sourceColumn: YearMonthKey
+
+	/// Short weekday name, Sun to Sat.
+	column 'Day of Week'
+		dataType: string
+		lineageTag: 401b7662-e6d2-4160-898b-9f3898e56afa
+		summarizeBy: none
+		sourceColumn: DayOfWeek
+		sortByColumn: 'Day of Week Number'
+
+	/// Weekday number, 1 = Sunday; sorts Day of Week.
+	column 'Day of Week Number'
+		dataType: int64
+		isHidden
+		lineageTag: fd7deb33-7568-4c59-b250-1c4ca4888251
+		summarizeBy: none
+		sourceColumn: DayOfWeekNumber
+
+	/// Yes on working days, No on weekends and holidays. Filtering it hides the plan, which is monthly.
+	column 'Working Day'
+		dataType: string
+		lineageTag: acb0535d-e084-46a6-8ed9-8e954f175f9f
+		summarizeBy: none
+		sourceColumn: WorkingDay
+
+	/// Year > Quarter > Month > Date. The plan shows down to month level.
+	hierarchy Calendar
+		lineageTag: 47045df0-7296-49d4-a491-1889d6c5baeb
+
+		level Year
+			lineageTag: 45fcb2a3-1a84-47cb-976b-159fdc0c127c
+			column: Year
+
+		level Quarter
+			lineageTag: 6241487a-b523-4b23-b52f-f3f43ccb1c4d
+			column: 'Year Quarter'
+
+		level Month
+			lineageTag: 08566dcb-84fb-494c-be86-63358a700eb8
+			column: 'Year Month'
+
+		level Date
+			lineageTag: 4a841f43-13e8-42fd-88f1-f3195850c880
+			column: Date
+
+	partition Date = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "DimDate"]}[Data]
+				in
+				    View
+

@@ -12,18 +12,20 @@
           Jul-Dec: budget closing half of the H1 gap:
                    BU x (0.5 + 0.5 x H1 actual / H1 budget), per category x country.
 
-    The online store's CountryCode '--' is relabelled 'ONL'.
+    The online store's CountryCode '--' is relabelled 'ONL', matching model.DimStore.
+    Keys for the semantic model: PlanVersionKey (-> model.PlanVersion), YearMonthKey
+    (-> model.DimDate), CategoryKey (-> model.DimProduct), CountryCode (-> model.DimStore).
 */
 
--- Scenario dimension (IBCS)
-CREATE OR ALTER VIEW model.Scenario AS
-SELECT Scenario, ScenarioName, SortOrder
+-- Plan version dimension (IBCS scenario codes). AC and PY come from actuals, not from here.
+DROP VIEW IF EXISTS model.Scenario;
+GO
+CREATE OR ALTER VIEW model.PlanVersion AS
+SELECT PlanVersionKey, Scenario, ScenarioName, SortOrder
 FROM (VALUES
-    (N'AC', N'Actual',        1),
-    (N'PY', N'Previous year', 2),
-    (N'BU', N'Budget',        3),
-    (N'FC', N'Forecast',      4)
-) s (Scenario, ScenarioName, SortOrder);
+    (1, N'BU', N'Budget',   3),
+    (2, N'FC', N'Forecast', 4)
+) v (PlanVersionKey, Scenario, ScenarioName, SortOrder);
 GO
 
 -- Budget growth target per category, 2025 vs 2024
@@ -76,11 +78,13 @@ Forecast AS (
            END FC
     FROM Budget
 )
-SELECT CAST(v.Scenario AS nvarchar(2)) Scenario,
+SELECT v.PlanVersionKey,
+       CAST(v.Scenario AS nvarchar(2)) Scenario,
        DATEFROMPARTS(2025, f.Mo, 1) MonthStart,
+       CAST(2025 * 100 + f.Mo AS int) YearMonthKey,
        f.CategoryKey,
        CAST(f.CountryCode AS nvarchar(3)) CountryCode,
        CAST(v.Amount AS decimal(19,4)) SalesAmountUSD
 FROM Forecast f
-CROSS APPLY (VALUES (N'BU', f.BU), (N'FC', f.FC)) v (Scenario, Amount);
+CROSS APPLY (VALUES (1, N'BU', f.BU), (2, N'FC', f.FC)) v (PlanVersionKey, Scenario, Amount);
 GO

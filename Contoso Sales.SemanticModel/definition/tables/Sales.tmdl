@@ -1,0 +1,97 @@
+/// Actual sales (AC) in USD, aggregated to day x store x product, 2016-05-18 to 2025-12-31. Net sales = quantity x net price; no exchange rate applied. Source: view model.FactSales.
+table Sales
+	lineageTag: e41b475d-f1a4-4d80-a104-7c11d35ecfa9
+
+	/// Net sales in USD: quantity x net price (after discounts). Source prices are already USD, so no exchange rate is applied. Use the Scenario calculation group for PY, BU, FC and variances, and the Time group for MTD/QTD/YTD.
+	measure 'Net Sales' = SUM ( 'Sales'[Net Sales Amount] )
+		formatString: \$#,##0
+		displayFolder: Sales
+		lineageTag: bd67c0ba-17a2-4343-8ef4-43adebdd4202
+
+	/// Units sold. Supports AC and PY only; there is no quantity plan, so BU and FC are blank.
+	measure 'Sales Quantity' = SUM ( 'Sales'[Quantity] )
+		formatString: #,##0
+		displayFolder: Sales
+		lineageTag: f795bad9-711d-4d0b-a932-f7f761895a44
+
+	/// Cost of goods sold in USD: quantity x unit cost. AC and PY only.
+	measure Cost = SUM ( 'Sales'[Cost Amount] )
+		formatString: \$#,##0
+		displayFolder: Margin
+		lineageTag: 78557194-9198-4930-9797-640b3fec8c8e
+
+	/// Net sales minus cost of goods sold, USD. AC and PY only; the plan has no cost.
+	measure 'Gross Margin' = [Net Sales] - [Cost]
+		formatString: \$#,##0
+		displayFolder: Margin
+		lineageTag: 717029a4-3acd-4747-939e-ac3e4f62846d
+
+	/// Gross margin as a share of net sales. AC and PY only.
+	measure 'Gross Margin %' = DIVIDE ( [Gross Margin], [Net Sales] )
+		formatString: 0.0%
+		displayFolder: Margin
+		lineageTag: 29bc4af4-bd2a-4b1e-9f20-ffd3820a3381
+
+	/// Order date key yyyymmdd.
+	column 'Date Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 20e3fb71-4e64-43bb-b915-6d9b6b9f3320
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	/// Store identifier.
+	column 'Store Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: f2f3d12e-ec65-47a8-978e-8a50152eb604
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+	/// Product identifier.
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: d0052294-cd07-403e-abf5-ce73c3d6e52c
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	/// Units sold.
+	column Quantity
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 59c4f9eb-8838-4fbb-8703-35e3d4c38e3d
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+	/// Quantity x net price, USD.
+	column 'Net Sales Amount'
+		dataType: decimal
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 979e4213-4d34-4f43-99e4-5cc0d74a471b
+		summarizeBy: sum
+		sourceColumn: NetSales
+
+	/// Quantity x unit cost, USD.
+	column 'Cost Amount'
+		dataType: decimal
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 43662c73-55a2-4fc9-bdcf-7a62108e564d
+		summarizeBy: sum
+		sourceColumn: CostAmount
+
+	partition Sales = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "FactSales"]}[Data]
+				in
+				    View
+

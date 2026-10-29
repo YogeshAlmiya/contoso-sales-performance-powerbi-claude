@@ -1,0 +1,77 @@
+/// Budget (BU) and forecast (FC) net sales for 2025 in USD at month x country x product category. DirectQuery. Source: view model.PlanSales.
+table Plan
+	lineageTag: 65b54d23-5d1c-4656-a7a2-6e5753f6967c
+
+	/// Planned net sales in USD for the plan versions in context (both BU and FC if none is selected, so use it through the Scenario calculation group). Blank when the filter context is below the plan grain of month x country x product category, for example by day, store, brand or working day.
+	measure 'Plan Sales' =
+			-- The plan is set per month x country x product category. Show it only when the
+			-- filter context covers whole months, whole countries and whole categories;
+			-- below that grain (a day, a store, a brand...) the plan cannot be split, so return blank.
+			VAR _isWholeMonths =
+			    COUNTROWS ( 'Date' )
+			        = CALCULATE ( COUNTROWS ( 'Date' ), REMOVEFILTERS ( 'Date' ), VALUES ( 'Date'[Year Month Key] ) )
+			VAR _isWholeCategories =
+			    COUNTROWS ( 'Product' )
+			        = CALCULATE ( COUNTROWS ( 'Product' ), REMOVEFILTERS ( 'Product' ), VALUES ( 'Product'[Category Key] ) )
+			VAR _isWholeCountries =
+			    COUNTROWS ( 'Store' )
+			        = CALCULATE ( COUNTROWS ( 'Store' ), REMOVEFILTERS ( 'Store' ), VALUES ( 'Store'[Country Code] ) )
+			RETURN
+			    IF (
+			        _isWholeMonths && _isWholeCategories && _isWholeCountries,
+			        SUM ( 'Plan'[Plan Sales Amount] )
+			    )
+		formatString: \$#,##0
+		isHidden
+		displayFolder: Plan
+		lineageTag: 0177fc5a-ce4e-460e-bcbd-a71b4a1e2503
+
+	/// Plan version: 1 = BU, 2 = FC.
+	column 'Plan Version Key'
+		dataType: int64
+		isHidden
+		lineageTag: 9f8e00fd-711e-470c-9d66-a396c93d8290
+		summarizeBy: none
+		sourceColumn: PlanVersionKey
+
+	/// Plan month yyyymm.
+	column 'Year Month Key'
+		dataType: int64
+		isHidden
+		lineageTag: a56880fb-9c62-44d5-ae0d-8a2fadb404eb
+		summarizeBy: none
+		sourceColumn: YearMonthKey
+
+	/// Product category identifier.
+	column 'Category Key'
+		dataType: int64
+		isHidden
+		lineageTag: 8b05fcaf-f2d0-4e18-b8ef-5b8b485f8169
+		summarizeBy: none
+		sourceColumn: CategoryKey
+
+	/// Store country code; ONL for the online store.
+	column 'Country Code'
+		dataType: string
+		isHidden
+		lineageTag: 8c1a8188-b9ef-4f37-baa2-1268dea4cb13
+		summarizeBy: none
+		sourceColumn: CountryCode
+
+	/// Planned net sales, USD.
+	column 'Plan Sales Amount'
+		dataType: decimal
+		isHidden
+		lineageTag: 9c4cb492-6054-4043-a5b3-5801acfdb3a2
+		summarizeBy: sum
+		sourceColumn: SalesAmountUSD
+
+	partition Plan = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "PlanSales"]}[Data]
+				in
+				    View
+

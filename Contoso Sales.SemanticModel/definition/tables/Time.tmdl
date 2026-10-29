@@ -1,0 +1,33 @@
+table Time
+
+	/// Period-to-date variants applied to any measure. Current = the period in context. Combine with Scenario: Scenario is applied outside Time, so PY + YTD = previous-year YTD.
+	calculationGroup
+		precedence: 10
+
+		/// The period in the filter context, unchanged.
+		calculationItem Current = SELECTEDMEASURE ()
+
+		/// Month to date, up to the last date in context.
+		calculationItem MTD = CALCULATE ( SELECTEDMEASURE (), DATESMTD ( 'Date'[Date] ) )
+
+		/// Quarter to date, up to the last date in context.
+		calculationItem QTD = CALCULATE ( SELECTEDMEASURE (), DATESQTD ( 'Date'[Date] ) )
+
+		/// Year to date, up to the last date in context.
+		calculationItem YTD = CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Date'[Date] ) )
+
+	/// Pick Current, MTD, QTD or YTD. With no selection, measures show the period in context.
+	column Time
+		dataType: string
+		sortByColumn: Ordinal
+
+	/// Display order of time items.
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: 853dfb46-7c95-41f6-ac41-4cda4262d9d1
+		summarizeBy: none
+		sourceColumn: Ordinal
+
+	partition Partition_Time = calculationGroup
+

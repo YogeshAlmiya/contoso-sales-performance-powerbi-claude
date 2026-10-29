@@ -1,0 +1,31 @@
+relationship Sales-Date
+	fromColumn: Sales.'Date Key'
+	toColumn: Date.'Date Key'
+
+relationship Sales-Store
+	fromColumn: Sales.'Store Key'
+	toColumn: Store.'Store Key'
+
+relationship Sales-Product
+	fromColumn: Sales.'Product Key'
+	toColumn: Product.'Product Key'
+
+relationship 'Plan-Plan Version'
+	fromColumn: Plan.'Plan Version Key'
+	toColumn: 'Plan Version'.'Plan Version Key'
+
+relationship 'Plan-Date (month)'
+	toCardinality: many
+	fromColumn: Plan.'Year Month Key'
+	toColumn: Date.'Year Month Key'
+
+relationship 'Plan-Product (category)'
+	toCardinality: many
+	fromColumn: Plan.'Category Key'
+	toColumn: Product.'Category Key'
+
+relationship 'Plan-Store (country)'
+	toCardinality: many
+	fromColumn: Plan.'Country Code'
+	toColumn: Store.'Country Code'
+

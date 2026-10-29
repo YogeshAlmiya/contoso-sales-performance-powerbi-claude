@@ -1,0 +1,46 @@
+/// Plan versions (IBCS scenarios): BU = Budget, FC = Forecast (Jan-Jun actuals, Jul-Dec reforecast). Hidden: the Scenario calculation group selects versions. Source: view model.PlanVersion.
+table 'Plan Version'
+	isHidden
+	lineageTag: 55a5f6d4-02ed-4b6a-8251-ea8eda31d878
+
+	/// Plan version identifier.
+	column 'Plan Version Key'
+		dataType: int64
+		isHidden
+		lineageTag: b49ff169-af7c-410e-b3cd-08b5e9373711
+		summarizeBy: none
+		sourceColumn: PlanVersionKey
+
+	/// IBCS scenario code, BU or FC.
+	column Scenario
+		dataType: string
+		lineageTag: 1e1d905c-bb4b-47c4-8143-a3c638e164f7
+		summarizeBy: none
+		sourceColumn: Scenario
+		sortByColumn: 'Sort Order'
+
+	/// Budget or Forecast.
+	column 'Scenario Name'
+		dataType: string
+		lineageTag: 0eae8c08-1385-4403-91f2-d0d0bc68c873
+		summarizeBy: none
+		sourceColumn: ScenarioName
+		sortByColumn: 'Sort Order'
+
+	/// IBCS scenario order: AC 1, PY 2, BU 3, FC 4.
+	column 'Sort Order'
+		dataType: int64
+		isHidden
+		lineageTag: 73354ff1-20fd-4895-911f-818c356138a8
+		summarizeBy: none
+		sourceColumn: SortOrder
+
+	partition 'Plan Version' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "PlanVersion"]}[Data]
+				in
+				    View
+

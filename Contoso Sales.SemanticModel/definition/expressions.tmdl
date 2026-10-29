@@ -1,0 +1,8 @@
+/// SQL Server instance that hosts the Contoso1M database.
+expression Server = "localhost" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 23b9aedd-b05f-4977-a7cf-48db3eb88d40
+
+/// SQL Server database. Model tables read views in schema model.
+expression Database = "Contoso1M" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 1b45cc82-8d4f-4b7b-95c8-880c1051ca3a
+

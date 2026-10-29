@@ -1,0 +1,73 @@
+/// Products with brand, subcategory and category, one row per product. The plan joins at Category. Source: view model.DimProduct.
+table Product
+	lineageTag: 229433ce-36da-4288-b062-6581152a59df
+
+	/// Product identifier; joins Sales.
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		lineageTag: 26207bc4-2f78-4527-8a4a-5c3713507a5a
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	/// Product name. Below plan grain: budget and forecast are blank when filtered by product.
+	column 'Product Name'
+		dataType: string
+		lineageTag: 8ea45412-9c31-4887-8697-dfa92015fd58
+		summarizeBy: none
+		sourceColumn: ProductName
+
+	/// Brand. Below plan grain: budget and forecast are blank when filtered by brand.
+	column Brand
+		dataType: string
+		lineageTag: f4884716-dfd8-499f-b560-ca94cb19b129
+		summarizeBy: none
+		sourceColumn: Brand
+
+	/// Product subcategory. Below plan grain: budget and forecast are blank when filtered by subcategory.
+	column Subcategory
+		dataType: string
+		lineageTag: 4d077d6b-915c-4a52-aa7d-2e7fcc1b4e25
+		summarizeBy: none
+		sourceColumn: Subcategory
+
+	/// Product category, the level at which budget and forecast are set (8 categories).
+	column Category
+		dataType: string
+		lineageTag: 7f9403e8-2754-49bf-8c5d-a744b171f58a
+		summarizeBy: none
+		sourceColumn: Category
+
+	/// Category identifier; joins the Plan table (many-to-many).
+	column 'Category Key'
+		dataType: int64
+		isHidden
+		lineageTag: 4fbe3c0d-ec62-486a-bd53-6b88fe5505ad
+		summarizeBy: none
+		sourceColumn: CategoryKey
+
+	/// Category > Subcategory > Product. The plan shows at category level only.
+	hierarchy 'Product Hierarchy'
+		lineageTag: 03ae3e20-9260-4f86-b0f6-70e9cf69823c
+
+		level Category
+			lineageTag: 9e564eee-a100-4755-b128-9f781f5f48ff
+			column: Category
+
+		level Subcategory
+			lineageTag: e72fd06f-7a64-48f7-809e-26e4b233a7fd
+			column: Subcategory
+
+		level Product
+			lineageTag: e5ff386e-ab20-467c-8f68-4b4dcd33e19d
+			column: 'Product Name'
+
+	partition Product = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "DimProduct"]}[Data]
+				in
+				    View
+

@@ -1,0 +1,107 @@
+// Contoso Sales: key measure tests.
+// Run one test at a time in Power BI Desktop > DAX query view: select the block and press Run.
+// Each test has a matching SQL query in tests/sql_expected.sql that computes the same numbers from Data.*.
+
+// ---------------------------------------------------------------------------
+// T1  AC 2025 by country (ONL = online store). SQL total: 299,946,187.09
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    ROLLUPADDISSUBTOTAL ( 'Store'[Country Code], "IsTotal" ),
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "AC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" )
+)
+ORDER BY [IsTotal], 'Store'[Country Code]
+
+// ---------------------------------------------------------------------------
+// T2  PY for 2025 by month = 2024 actuals. SQL total: 325,037,485.19
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    ROLLUPADDISSUBTOTAL ( ( 'Date'[Year Month Key], 'Date'[Year Month] ), "IsTotal" ),
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "AC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" ),
+    "PY", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" ),
+    "ΔPY%", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔPY%" )
+)
+ORDER BY [IsTotal], 'Date'[Year Month Key]
+
+// ---------------------------------------------------------------------------
+// T3  BU and FC 2025 by country x category (72 rows). SQL totals: BU 349,547,871, FC 292,773,871
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    'Store'[Country Code],
+    'Product'[Category],
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "AC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" ),
+    "BU", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU" ),
+    "FC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "FC" )
+)
+ORDER BY 'Store'[Country Code], 'Product'[Category]
+
+// ---------------------------------------------------------------------------
+// T4  2025 by channel: AC, BU, ΔBU, ΔBU%, FC, ΔFC%, PY, ΔPY%
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    ROLLUPADDISSUBTOTAL ( 'Store'[Channel], "IsTotal" ),
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "AC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" ),
+    "BU", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU" ),
+    "ΔBU", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU" ),
+    "ΔBU%", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU%" ),
+    "FC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "FC" ),
+    "ΔFC%", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔFC%" ),
+    "PY", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" ),
+    "ΔPY%", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔPY%" )
+)
+ORDER BY [IsTotal], 'Store'[Channel]
+
+// ---------------------------------------------------------------------------
+// T5  YTD through June 2025: Time = YTD combined with Scenario AC, PY, BU, ΔBU
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    TREATAS ( { "Jun 2025" }, 'Date'[Year Month] ),
+    TREATAS ( { "YTD" }, 'Time'[Time] ),
+    "AC YTD", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" ),
+    "PY YTD", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" ),
+    "BU YTD", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU" ),
+    "ΔBU YTD", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU" ),
+    "FC YTD", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "FC" )
+)
+
+// ---------------------------------------------------------------------------
+// T6  Gross margin 2025 vs PY; BU must be blank (no cost plan)
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "Net Sales", [Net Sales],
+    "Cost", [Cost],
+    "Gross Margin", [Gross Margin],
+    "Gross Margin %", [Gross Margin %],
+    "Gross Margin % PY", CALCULATE ( [Gross Margin %], 'Scenario'[Scenario] = "PY" ),
+    "Gross Margin BU (expect blank)", CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "BU" ),
+    "Sales Quantity", [Sales Quantity]
+)
+
+// ---------------------------------------------------------------------------
+// T7  Plan grain guard, 2025 budget. Expected:
+//     by category / country / channel / month   -> values
+//     by brand / store / date / working day      -> blank
+//     Online channel BU = ONL country BU
+// ---------------------------------------------------------------------------
+EVALUATE
+{
+    ( "Total", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025 ) ),
+    ( "Category = Computers", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Product'[Category] = "Computers" ) ),
+    ( "Channel = Online", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Store'[Channel] = "Online" ) ),
+    ( "Country Code = ONL", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Store'[Country Code] = "ONL" ) ),
+    ( "Month = Mar 2025", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year Month] = "Mar 2025" ) ),
+    ( "Brand = Contoso (blank)", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Product'[Brand] = "Contoso" ) ),
+    ( "Store = Contoso Store Berlin (blank)", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Store'[Store Name] = "Contoso Store Berlin" ) ),
+    ( "Date = 2025-03-15 (blank)", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Date] = DATE ( 2025, 3, 15 ) ) ),
+    ( "Working Day = Yes (blank)", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Date'[Working Day] = "Yes" ) )
+}

@@ -1,0 +1,101 @@
+table Scenario
+
+	/// IBCS scenarios and variances. AC = actual, PY = previous year (actual shifted one year), BU = budget, FC = forecast. Δ items are AC minus the comparison; Δ% items divide by the comparison. BU and FC exist only for Net Sales (2025, month x country x category).
+	calculationGroup
+		precedence: 20
+
+		/// Actual.
+		calculationItem AC = SELECTEDMEASURE ()
+
+		/// Previous year: the measure for the same period one year earlier.
+		calculationItem PY = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+
+		/// Budget. Net Sales only; blank for other measures and below plan grain.
+		calculationItem BU =
+				IF (
+				    ISSELECTEDMEASURE ( [Net Sales] ),
+				    CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "BU" )
+				)
+
+		/// Forecast (Jan-Jun actuals, Jul-Dec reforecast). Net Sales only; blank for other measures and below plan grain.
+		calculationItem FC =
+				IF (
+				    ISSELECTEDMEASURE ( [Net Sales] ),
+				    CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "FC" )
+				)
+
+		/// AC minus PY. Blank when either is blank.
+		calculationItem ΔPY =
+				VAR _actual = SELECTEDMEASURE ()
+				VAR _previousYear = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+				RETURN
+				    IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _previousYear ), _actual - _previousYear )
+
+		/// (AC minus PY) divided by PY.
+		calculationItem ΔPY% =
+				VAR _actual = SELECTEDMEASURE ()
+				VAR _previousYear = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+				RETURN
+				    IF ( NOT ISBLANK ( _actual ), DIVIDE ( _actual - _previousYear, _previousYear ) )
+
+			formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+		/// AC minus BU. Net Sales only.
+		calculationItem ΔBU =
+				IF (
+				    ISSELECTEDMEASURE ( [Net Sales] ),
+				    VAR _actual = SELECTEDMEASURE ()
+				    VAR _budget = CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "BU" )
+				    RETURN
+				        IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _budget ), _actual - _budget )
+				)
+
+		/// (AC minus BU) divided by BU. Net Sales only.
+		calculationItem ΔBU% =
+				IF (
+				    ISSELECTEDMEASURE ( [Net Sales] ),
+				    VAR _actual = SELECTEDMEASURE ()
+				    VAR _budget = CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "BU" )
+				    RETURN
+				        IF ( NOT ISBLANK ( _actual ), DIVIDE ( _actual - _budget, _budget ) )
+				)
+
+			formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+		/// AC minus FC (forecast accuracy). Net Sales only.
+		calculationItem ΔFC =
+				IF (
+				    ISSELECTEDMEASURE ( [Net Sales] ),
+				    VAR _actual = SELECTEDMEASURE ()
+				    VAR _forecast = CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "FC" )
+				    RETURN
+				        IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _forecast ), _actual - _forecast )
+				)
+
+		/// (AC minus FC) divided by FC. Net Sales only.
+		calculationItem ΔFC% =
+				IF (
+				    ISSELECTEDMEASURE ( [Net Sales] ),
+				    VAR _actual = SELECTEDMEASURE ()
+				    VAR _forecast = CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "FC" )
+				    RETURN
+				        IF ( NOT ISBLANK ( _actual ), DIVIDE ( _actual - _forecast, _forecast ) )
+				)
+
+			formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+	/// Pick AC, PY, BU, FC or a variance. Put it on columns or in a slicer; with no selection, measures show actuals.
+	column Scenario
+		dataType: string
+		sortByColumn: Ordinal
+
+	/// Display order of scenario items.
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: 926210a4-982e-4d1f-a016-e1008457605b
+		summarizeBy: none
+		sourceColumn: Ordinal
+
+	partition Partition_Scenario = calculationGroup
+
