@@ -6,7 +6,8 @@ Power BI development for **Contoso**, a fictional electronics retailer selling t
 
 - **SQL Server 2022** `Contoso1M` on `localhost`. Source tables are in schema `Data`: Sales, Orders, OrderRows, Customer, Product, Store, Date, CurrencyExchange. Schema `model` is empty and yours.
 - Sales history runs from 2016-05-18 to 2025-12-31. 2016 is a partial year; 2025 is the latest complete year.
-- Amounts (UnitPrice, NetPrice, UnitCost) are in the order's local currency; `ExchangeRate` on each sales row converts to USD. Report everything in USD.
+- Amounts (UnitPrice, NetPrice, UnitCost) are in USD: the same product has the same price in every currency on a given day. `ExchangeRate` converts USD to the order's local currency (it equals `Data.CurrencyExchange` USD → CurrencyCode on the order date). Report everything in USD: net sales = Quantity × NetPrice, with no exchange rate.
+- The online store (StoreKey 999999) has CountryCode `--` in the source; model views relabel it `ONL` (CountryName `Online`).
 - There is no budget or forecast in the source. Plan data is built as SQL views in `model`.
 - Read structure before modelling: `uv run tools/sql.py --describe` (all) or `--describe Data.Sales` (one).
 - Query with `uv run tools/sql.py "<SQL>"`, or run a script with `-f file.sql` (batches separated by `GO`). Options: `--format csv|json`, `--max-rows 0`. The login reads every table, can create views only in schema `model`, and cannot change data.
