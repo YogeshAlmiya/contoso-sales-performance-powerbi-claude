@@ -87,6 +87,8 @@ table Scenario
 	/// Pick AC, PY, BU, FC or a variance. Put it on columns or in a slicer; with no selection, measures show actuals.
 	column Scenario
 		dataType: string
+		summarizeBy: none
+		sourceColumn: Name
 		sortByColumn: Ordinal
 
 	/// Display order of scenario items.

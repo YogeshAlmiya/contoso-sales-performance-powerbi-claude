@@ -19,6 +19,8 @@ table Time
 	/// Pick Current, MTD, QTD or YTD. With no selection, measures show the period in context.
 	column Time
 		dataType: string
+		summarizeBy: none
+		sourceColumn: Name
 		sortByColumn: Ordinal
 
 	/// Display order of time items.
