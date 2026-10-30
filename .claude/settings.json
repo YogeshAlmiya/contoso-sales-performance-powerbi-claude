@@ -3,6 +3,8 @@
     "defaultMode": "acceptEdits",
     "allow": [
       "Bash(uv run tools/sql.py:*)",
+      "Bash(uv run tools/validate_pbip.py:*)",
+      "Bash(npx -y @microsoft/powerbi-report-authoring-cli:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",

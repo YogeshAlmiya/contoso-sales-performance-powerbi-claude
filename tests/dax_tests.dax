@@ -18,7 +18,7 @@ ORDER BY [IsTotal], 'Store'[Country Code]
 // ---------------------------------------------------------------------------
 EVALUATE
 SUMMARIZECOLUMNS (
-    ROLLUPADDISSUBTOTAL ( ( 'Date'[Year Month Key], 'Date'[Year Month] ), "IsTotal" ),
+    ROLLUPADDISSUBTOTAL ( ROLLUPGROUP ( 'Date'[Year Month Key], 'Date'[Year Month] ), "IsTotal" ),
     TREATAS ( { 2025 }, 'Date'[Year] ),
     "AC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" ),
     "PY", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" ),

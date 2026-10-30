@@ -34,3 +34,5 @@ Power BI development for **Contoso**, a fictional electronics retailer selling t
 - I'm learning this workflow. Show your plan before building anything, and briefly explain why you chose each design.
 - Test key measures against SQL and show me the comparison.
 - Keep everything inside this folder.
+- Before telling me to open or reload a project in Desktop, run `uv run tools/validate_pbip.py` and fix any failures.
+- DAX tests live in `tests/dax_tests.dax` with expected values from `tests/sql_expected.sql`; after any model change, re-run them against Desktop and show the comparison table.
