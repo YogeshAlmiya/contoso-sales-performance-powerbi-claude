@@ -88,3 +88,17 @@ SELECT v.PlanVersionKey,
 FROM Forecast f
 CROSS APPLY (VALUES (1, N'BU', f.BU), (2, N'FC', f.FC)) v (PlanVersionKey, Scenario, Amount);
 GO
+
+/*
+    Plan fact for the semantic model (DirectQuery): only the columns the model uses, so a refresh in
+    Desktop does not add the Scenario and MonthStart helper columns. The amount is money so Power Query
+    reads it as Fixed Decimal; decimal(19,4) arrives as a floating-point number.
+*/
+CREATE OR ALTER VIEW model.FactPlan AS
+SELECT PlanVersionKey,
+       YearMonthKey,
+       CategoryKey,
+       CountryCode,
+       CAST(SalesAmountUSD AS money) SalesAmountUSD
+FROM model.PlanSales;
+GO

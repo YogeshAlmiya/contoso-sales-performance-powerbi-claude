@@ -23,11 +23,11 @@
                       "Entity": "Date"
                     }
                   },
-                  "Property": "Year Month"
+                  "Property": "Month"
                 }
               },
-              "queryRef": "Date.Year Month",
-              "nativeQueryRef": "Year Month"
+              "queryRef": "Date.Month",
+              "nativeQueryRef": "Month"
             }
           ]
         },
@@ -78,7 +78,7 @@
                     "Entity": "Date"
                   }
                 },
-                "Property": "Year Month"
+                "Property": "Month"
               }
             },
             "direction": "Ascending"
@@ -365,6 +365,19 @@
                       "Value": "'#252423'"
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
                 }
               }
             }

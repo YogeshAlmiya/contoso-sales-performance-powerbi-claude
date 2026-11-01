@@ -69,6 +69,7 @@ const yearFilter = (seed) => ({
 
 const titleVco = (text) => ({
   title: [props({ show: bool(true), text: str(text), fontFamily: str("Segoe UI Semibold"), fontSize: num(12), fontColor: color(TEXT) })],
+  subTitle: [props({ show: bool(false) })],
   padding: [props({ top: num(8), bottom: num(8), left: num(8), right: num(8) })],
   border: [props({ show: bool(false) })],
   dropShadow: [props({ show: bool(false) })],
@@ -77,7 +78,7 @@ const titleVco = (text) => ({
 
 const sortBy = (field, direction) => ({ sort: [{ field, direction }], isDefaultSort: true });
 
-const millionsLabels = (extra = {}) => ({ show: bool(true), labelDisplayUnits: str("1000000"), labelPrecision: int(1), fontSize: num(9), color: color(TEXT), ...extra });
+const millionsLabels = (extra = {}) => ({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(9), color: color(TEXT), ...extra });
 
 // ---------------------------------------------------------------- visual builders
 function container(seed, kind, pos, visual, extra = {}) {
@@ -121,7 +122,7 @@ function dropdown(seed, table, column, header, group, pos) {
 
 // One card: several callouts in one tile; optional red/green value colour driven by a variance measure
 function card(seed, measures, pos, opts = {}) {
-  const value = [props({ fontSize: num(opts.valueSize ?? 24), labelDisplayUnits: str(opts.units ?? "1000000"), labelPrecision: int(1), fontColor: opts.signMeasure ? signColor(opts.signMeasure) : color(TEXT) }, { id: "default" })];
+  const value = [props({ fontSize: num(opts.valueSize ?? 24), labelDisplayUnits: str(opts.units ?? "0"), labelPrecision: int(1), fontColor: opts.signMeasure ? signColor(opts.signMeasure) : color(TEXT) }, { id: "default" })];
   return container(seed, "cardVisual", pos, {
     query: { queryState: { Data: { projections: measures.map((m) => mProj(m)) } } },
     objects: {
@@ -134,6 +135,7 @@ function card(seed, measures, pos, opts = {}) {
     },
     visualContainerObjects: {
       title: [props({ show: bool(true), text: str(opts.title), fontFamily: str("Segoe UI Semibold"), fontSize: num(11), fontColor: color(TEXT2) })],
+      subTitle: [props({ show: bool(false) })],
       padding: [props({ top: num(8), bottom: num(8), left: num(8), right: num(8) }, { id: "default" })],
       background: [props({ show: bool(true), color: color("#FAFAFA"), transparency: num(0) })],
       border: [props({ show: bool(false) })],
@@ -154,8 +156,8 @@ const scenarioDataPoint = (measures) => measures.map((m) => {
 function scenarioChart(seed, kind, category, measures, title, pos, opts = {}) {
   const queryState = { Category: { projections: [category] }, Y: { projections: measures.map((m) => mProj(m)) } };
   if (opts.rows) queryState.Rows = { projections: [opts.rows] };
-  const labels = [props({ show: bool(opts.labelAll ?? false), labelDisplayUnits: str("1000000"), labelPrecision: int(1), fontSize: num(9), color: color(TEXT) })];
-  if (!opts.labelAll) labels.push(props({ show: bool(true) }, { metadata: "Sales.AC" }));
+  const labels = [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(9), color: color(TEXT) })];
+  for (const m of measures) if (m !== "AC") labels.push(props({ show: bool(false) }, { metadata: `Sales.${m}` }));
   const objects = {
     dataPoint: scenarioDataPoint(measures),
     labels,
@@ -230,7 +232,7 @@ function matrix(seed, rows, columns, measures, varianceMeasures, title, pos, sor
   return container(seed, "pivotTable", pos, {
     query: { queryState: { Rows: { projections: [rows] }, Columns: { projections: [columns] }, Values: { projections: measures.map((m) => mProj(m)) } }, sortDefinition: sort },
     objects: {
-      ...tableChrome(8),
+      ...tableChrome(5),
       rowHeaders: [props({ fontSize: num(11), fontColor: color(TEXT) })],
       values: [props({ backColorPrimary: color("#FFFFFF"), backColorSecondary: color("#FFFFFF"), fontColorPrimary: color(TEXT), fontColorSecondary: color(TEXT) }), ...tableValueColors(varianceMeasures)],
     },
@@ -240,10 +242,12 @@ function matrix(seed, rows, columns, measures, varianceMeasures, title, pos, sor
 
 // ---------------------------------------------------------------- pages
 const month = cProj("Date", "Year Month");
+const monthShort = cProj("Date", "Month");
 const channel = cProj("Store", "Channel");
 const country = cProj("Store", "Country");
 const category = cProj("Product", "Category");
 const monthSort = sortBy(columnExpr("Date", "Year Month"), "Ascending");
+const monthShortSort = sortBy(columnExpr("Date", "Month"), "Ascending");
 const CONTENT_Y = 128;
 
 function header(pageKey, title) {
@@ -276,9 +280,9 @@ const pages = [
     displayName: "Channel",
     title: "Online lost $31.6M vs last year (−16%) and missed budget by 22%; physical stores grew 5%",
     visuals: (k) => [
-      scenarioChart(`${k}/monthly`, "clusteredColumnChart", month, ["PY", "AC", "BU"], "Net sales by month and channel, $M: AC vs PY and BU", { x: M, y: CONTENT_Y, w: 1144, h: 512, z: 1000 }, { sort: monthSort, rows: channel, gap: 15 }),
+      scenarioChart(`${k}/monthly`, "clusteredColumnChart", monthShort, ["PY", "AC", "BU"], "Net sales by month and channel, $M: AC vs PY and BU", { x: M, y: CONTENT_Y, w: 1144, h: 512, z: 1000 }, { sort: monthShortSort, rows: channel, gap: 15 }),
       waterfall(`${k}/bridge`, channel, "Change vs last year by channel, $M (ΔPY)", { x: 1200, y: CONTENT_Y, w: 688, h: 512, z: 2000 }),
-      varianceChart(`${k}/monthly_dpy_pct`, "clusteredColumnChart", month, "ΔPY %", "ΔPY % by month and channel", { x: M, y: 664, w: 880, h: 384, z: 3000 }, { sort: monthSort, rows: channel }),
+      varianceChart(`${k}/monthly_dpy_pct`, "clusteredColumnChart", monthShort, "ΔPY %", "ΔPY % by month and channel", { x: M, y: 664, w: 880, h: 384, z: 3000 }, { sort: monthShortSort, rows: channel }),
       table(`${k}/scorecard`, [
         channel,
         mProj("Scenario Bars SVG", "PY · AC · BU · FC (hatched)"),
