@@ -15,7 +15,7 @@ Power BI development for **Contoso**, a fictional electronics retailer selling t
 ## Modelling conventions
 
 - Do all data preparation in SQL, as views in schema `model`. Semantic model tables point at a view and nothing more: no Power Query transformation steps.
-- Storage modes: dimensions and actuals in Import; the plan fact (budget and forecast) in DirectQuery.
+- Storage modes: everything in Import, including the plan fact (budget and forecast): it is small (1,728 rows) and static, and DirectQuery would recompute the plan view from Sales on every query.
 - Plan versions are a dimension of their own. Scenario names follow IBCS: AC, PY, BU, FC.
 - Every measure has a description, display folder and format string.
 

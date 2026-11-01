@@ -44,7 +44,7 @@ SELECT st.StoreKey,
        st.State,
        CAST(CASE WHEN st.CountryCode = N'--' THEN N'ONL' ELSE st.CountryCode END AS nvarchar(3)) CountryCode,
        st.CountryName,
-       CAST(CASE WHEN st.CountryCode = N'--' THEN N'Online' ELSE N'Store' END AS nvarchar(6)) Channel,
+       CAST(CASE WHEN st.CountryCode = N'--' THEN N'Online' ELSE N'Stores' END AS nvarchar(6)) Channel,
        CAST(CASE
                 WHEN NULLIF(st.Status, N'') IS NOT NULL THEN st.Status
                 WHEN st.CloseDate <= '2025-12-31' THEN N'Closed'

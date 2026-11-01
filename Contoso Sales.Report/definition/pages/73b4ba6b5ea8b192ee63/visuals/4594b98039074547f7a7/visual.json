@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
-  "name": "b2c80be5d7705bc2f8a1",
+  "name": "4594b98039074547f7a7",
   "position": {
-    "x": 1552,
+    "x": 400,
     "y": 128,
-    "z": 1300,
-    "height": 120,
-    "width": 336,
-    "tabOrder": 1300
+    "z": 1020,
+    "height": 112,
+    "width": 176,
+    "tabOrder": 1020
   },
   "visual": {
     "visualType": "cardVisual",
@@ -23,25 +23,11 @@
                       "Entity": "Sales"
                     }
                   },
-                  "Property": "ΔFC"
+                  "Property": "BU"
                 }
               },
-              "queryRef": "Sales.ΔFC",
-              "nativeQueryRef": "ΔFC"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Sales"
-                    }
-                  },
-                  "Property": "ΔFC %"
-                }
-              },
-              "queryRef": "Sales.ΔFC %",
-              "nativeQueryRef": "ΔFC %"
+              "queryRef": "Sales.BU",
+              "nativeQueryRef": "BU"
             }
           ]
         }
@@ -54,14 +40,14 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "24D"
+                  "Value": "22D"
                 }
               }
             },
             "labelDisplayUnits": {
               "expr": {
                 "Literal": {
-                  "Value": "'0'"
+                  "Value": "'1000000'"
                 }
               }
             },
@@ -76,68 +62,8 @@
               "solid": {
                 "color": {
                   "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 2,
-                              "Left": {
-                                "Measure": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "Sales"
-                                    }
-                                  },
-                                  "Property": "ΔFC"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "0D"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2E8540'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 3,
-                              "Left": {
-                                "Measure": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "Sales"
-                                    }
-                                  },
-                                  "Property": "ΔFC"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "0D"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#C0392B'"
-                            }
-                          }
-                        }
-                      ],
-                      "DefaultValue": {
-                        "Literal": {
-                          "Value": "'#605E5C'"
-                        }
-                      }
+                    "Literal": {
+                      "Value": "'#252423'"
                     }
                   }
                 }
@@ -155,7 +81,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "11D"
+                  "Value": "12D"
                 }
               }
             },
@@ -246,7 +172,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#2E8540'"
+                      "Value": "'#404040'"
                     }
                   }
                 }
@@ -280,39 +206,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'vs latest forecast (FC)'"
-                }
-              }
-            },
-            "fontFamily": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Segoe UI Semibold'"
-                }
-              }
-            },
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "11D"
-                }
-              }
-            },
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#605E5C'"
-                    }
-                  }
+                  "Value": "false"
                 }
               }
             }
@@ -431,7 +325,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "Filter6b0a73b32852cecb95fed0f9",
+        "name": "Filter1d1e3a55b0eea5871073ae36",
         "field": {
           "Column": {
             "Expression": {

@@ -38,7 +38,7 @@ table Store
 		summarizeBy: none
 		sourceColumn: CountryName
 
-	/// Store for physical stores, Online for the online store. Derived from country, so budget and forecast work by channel.
+	/// Stores for physical stores, Online for the online store. Derived from country, so budget and forecast work by channel.
 	column Channel
 		dataType: string
 		lineageTag: 52ca8dee-4d85-40c8-8df7-8eb9a97e24de

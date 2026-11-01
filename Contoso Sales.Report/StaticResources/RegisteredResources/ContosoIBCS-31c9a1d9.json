@@ -1,5 +1,5 @@
 {
-  "name": "ContosoIBCS-d4939c3b.json",
+  "name": "ContosoIBCS-31c9a1d9.json",
   "dataColors": [
     "#404040",
     "#C8C8C8",
@@ -108,7 +108,7 @@
         "header": [
           {
             "fontFamily": "Segoe UI Semibold",
-            "textSize": 10,
+            "textSize": 12,
             "fontColor": {
               "solid": {
                 "color": "#252423"
@@ -120,7 +120,7 @@
         "items": [
           {
             "fontFamily": "Segoe UI",
-            "textSize": 10,
+            "textSize": 12,
             "fontColor": {
               "solid": {
                 "color": "#252423"

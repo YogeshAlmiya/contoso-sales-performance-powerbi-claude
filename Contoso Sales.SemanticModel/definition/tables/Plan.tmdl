@@ -1,4 +1,4 @@
-/// Budget (BU) and forecast (FC) net sales for 2025 in USD at month x country x product category. DirectQuery. Source: view model.FactPlan.
+/// Budget (BU) and forecast (FC) net sales for 2025 in USD at month x country x product category. Import (small and static). Source: view model.FactPlan.
 table Plan
 	lineageTag: 65b54d23-5d1c-4656-a7a2-6e5753f6967c
 
@@ -67,7 +67,7 @@ table Plan
 		sourceColumn: SalesAmountUSD
 
 	partition Plan = m
-		mode: directQuery
+		mode: import
 		source =
 				let
 				    Source = Sql.Database(Server, Database),

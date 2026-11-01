@@ -3,9 +3,9 @@
   "name": "565f8982e362dfcab208",
   "position": {
     "x": 972,
-    "y": 592,
+    "y": 552,
     "z": 4000,
-    "height": 456,
+    "height": 496,
     "width": 916,
     "tabOrder": 4000
   },
@@ -220,7 +220,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "9D"
+                  "Value": "11D"
                 }
               }
             },
@@ -232,6 +232,13 @@
                       "Value": "'#252423'"
                     }
                   }
+                }
+              }
+            },
+            "labelPosition": {
+              "expr": {
+                "Literal": {
+                  "Value": "'OutsideEnd'"
                 }
               }
             }
@@ -286,7 +293,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "10D"
+                  "Value": "12D"
                 }
               }
             },
@@ -317,7 +324,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "10D"
+                  "Value": "12D"
                 }
               }
             },
@@ -425,7 +432,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "14D"
                 }
               }
             },

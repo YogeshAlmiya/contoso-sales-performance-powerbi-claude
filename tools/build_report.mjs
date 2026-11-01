@@ -13,10 +13,12 @@ const VISUAL_SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/
 const PAGE_SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json";
 
 // ---------------------------------------------------------------- IBCS palette
-const AC = "#404040", PY = "#C8C8C8", BU_FILL = "#FFFFFF", FC_FILL = "#E6E6E6";
+const AC = "#404040", PY = "#C8C8C8", BU_FILL = "#FFFFFF";
 const GOOD = "#2E8540", BAD = "#C0392B";
 const TEXT = "#252423", TEXT2 = "#605E5C", LINE = "#E1DFDD";
 const W = 1920, H = 1080, M = 32, G = 24;
+// Type sizes for a 1920 x 1080 canvas read at 100% zoom
+const T_TITLE = 14, T_LABEL = 12, T_AXIS = 12, T_TABLE = 12;
 
 // ---------------------------------------------------------------- encoding helpers
 const hex = (seed, n = 20) => crypto.createHash("sha1").update(seed).digest("hex").slice(0, n);
@@ -68,7 +70,7 @@ const yearFilter = (seed) => ({
 });
 
 const titleVco = (text) => ({
-  title: [props({ show: bool(true), text: str(text), fontFamily: str("Segoe UI Semibold"), fontSize: num(12), fontColor: color(TEXT) })],
+  title: [props({ show: bool(true), text: str(text), fontFamily: str("Segoe UI Semibold"), fontSize: num(T_TITLE), fontColor: color(TEXT) })],
   subTitle: [props({ show: bool(false) })],
   padding: [props({ top: num(8), bottom: num(8), left: num(8), right: num(8) })],
   border: [props({ show: bool(false) })],
@@ -78,7 +80,7 @@ const titleVco = (text) => ({
 
 const sortBy = (field, direction) => ({ sort: [{ field, direction }], isDefaultSort: true });
 
-const millionsLabels = (extra = {}) => ({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(9), color: color(TEXT), ...extra });
+const millionsLabels = (extra = {}) => ({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(T_LABEL), color: color(TEXT), labelPosition: str("OutsideEnd"), ...extra });
 
 // ---------------------------------------------------------------- visual builders
 function container(seed, kind, pos, visual, extra = {}) {
@@ -101,7 +103,7 @@ function pageNav(seed, pos) {
       pages: [props({ showHiddenPages: bool(false), showTooltipPages: bool(false) })],
       layout: [props({ cellPadding: int(8) })],
       fill: [props({ show: bool(true), fillColor: color("#F3F2F1"), transparency: num(0) }, { id: "default" }), props({ show: bool(true), fillColor: color(AC), transparency: num(0) }, { id: "selected" })],
-      text: [props({ fontFamily: str("Segoe UI"), fontSize: num(10), fontColor: color(TEXT) }, { id: "default" }), props({ fontColor: color("#FFFFFF"), bold: bool(true) }, { id: "selected" })],
+      text: [props({ fontFamily: str("Segoe UI"), fontSize: num(12), fontColor: color(TEXT) }, { id: "default" }), props({ fontColor: color("#FFFFFF"), bold: bool(true) }, { id: "selected" })],
       outline: [props({ show: bool(false) }, { id: "default" }), props({ show: bool(false) }, { id: "selected" })],
     },
     visualContainerObjects: { padding: [props({ top: num(0), bottom: num(0), left: num(0), right: num(0) })], border: [props({ show: bool(false) })] },
@@ -120,21 +122,24 @@ function dropdown(seed, table, column, header, group, pos) {
   });
 }
 
-// One card: several callouts in one tile; optional red/green value colour driven by a variance measure
-function card(seed, measures, pos, opts = {}) {
-  const value = [props({ fontSize: num(opts.valueSize ?? 24), labelDisplayUnits: str(opts.units ?? "0"), labelPrecision: int(1), fontColor: opts.signMeasure ? signColor(opts.signMeasure) : color(TEXT) }, { id: "default" })];
+// One KPI card per measure, so $ values can show in $M while % values stay %; variances are red/green by sign
+const KPI_ACCENT = { AC, PY, BU: AC, FC: "#8C8C8C" };
+function kpiCard(seed, m, pos) {
+  const isVariance = m.startsWith("Δ");
+  const isPct = m.endsWith("%");
+  const sign = isVariance ? signColor(m) : null;
   return container(seed, "cardVisual", pos, {
-    query: { queryState: { Data: { projections: measures.map((m) => mProj(m)) } } },
+    query: { queryState: { Data: { projections: [mProj(m)] } } },
     objects: {
-      value,
-      label: [props({ fontSize: num(11), fontColor: color(TEXT2), position: str("aboveValue") }, { id: "default" })],
+      value: [props({ fontSize: num(22), labelDisplayUnits: str(isPct ? "1" : "1000000"), labelPrecision: int(1), fontColor: sign ?? color(TEXT) }, { id: "default" })],
+      label: [props({ fontSize: num(T_LABEL), fontColor: color(TEXT2), position: str("aboveValue") }, { id: "default" })],
       padding: [props({ paddingUniform: int(8) }, { id: "default" })],
       layout: [props({ paddingUniform: int(0) }, { id: "default" })],
       outline: [props({ show: bool(false) }, { id: "default" })],
-      accentBar: [props({ show: bool(true), color: color(opts.accent ?? AC), width: num(4), position: str("Left") }, { id: "default" })],
+      accentBar: [props({ show: bool(true), color: sign ?? color(KPI_ACCENT[m]), width: num(4), position: str("Left") }, { id: "default" })],
     },
     visualContainerObjects: {
-      title: [props({ show: bool(true), text: str(opts.title), fontFamily: str("Segoe UI Semibold"), fontSize: num(11), fontColor: color(TEXT2) })],
+      title: [props({ show: bool(false) })],
       subTitle: [props({ show: bool(false) })],
       padding: [props({ top: num(8), bottom: num(8), left: num(8), right: num(8) }, { id: "default" })],
       background: [props({ show: bool(true), color: color("#FAFAFA"), transparency: num(0) })],
@@ -144,25 +149,38 @@ function card(seed, measures, pos, opts = {}) {
   }, { filterConfig: yearFilter(seed) });
 }
 
+// KPI strip: AC PY BU FC | ΔPY ΔPY % | ΔBU ΔBU % | ΔFC ΔFC %; cards 8px apart in a group, 16px between groups
+function kpiStrip(pageKey, y) {
+  const groups = [["AC", "PY", "BU", "FC"], ["ΔPY", "ΔPY %"], ["ΔBU", "ΔBU %"], ["ΔFC", "ΔFC %"]];
+  const w = 176, h = 112;
+  const cards = [];
+  let x = M, z = 1000;
+  for (const g of groups) {
+    for (const m of g) { cards.push(kpiCard(`${pageKey}/kpi/${m}`, m, { x, y, w, h, z })); x += w + 8; z += 10; }
+    x += 8;
+  }
+  return cards;
+}
+
 // Scenario columns/bars: per-measure IBCS notation
 const scenarioDataPoint = (measures) => measures.map((m) => {
   const s = { metadata: `Sales.${m}` };
   if (m === "AC") return props({ fill: color(AC), borderShow: bool(false) }, s);
   if (m === "PY") return props({ fill: color(PY), borderShow: bool(false) }, s);
   if (m === "BU") return props({ fill: color(BU_FILL), borderShow: bool(true), borderColor: color(AC), borderSize: num(1.5) }, s);
-  return props({ fill: color(FC_FILL), borderShow: bool(true), borderColor: color("#7F7F7F"), borderSize: num(1.5) }, s); // FC: approximation of hatching
+  return props({ fill: color(AC), fillTransparency: num(60), borderShow: bool(true), borderColor: color(AC), borderSize: num(1.5) }, s); // FC: tinted AC with outline, standing in for IBCS hatching
 });
 
 function scenarioChart(seed, kind, category, measures, title, pos, opts = {}) {
   const queryState = { Category: { projections: [category] }, Y: { projections: measures.map((m) => mProj(m)) } };
   if (opts.rows) queryState.Rows = { projections: [opts.rows] };
-  const labels = [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(9), color: color(TEXT) })];
+  const labels = [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(T_LABEL - 1), color: color(TEXT), labelPosition: str("OutsideEnd") })];
   for (const m of measures) if (m !== "AC") labels.push(props({ show: bool(false) }, { metadata: `Sales.${m}` }));
   const objects = {
     dataPoint: scenarioDataPoint(measures),
     labels,
-    legend: [props({ show: bool(true), position: str("Top"), fontSize: num(10), labelColor: color(TEXT2) })],
-    categoryAxis: [props({ show: bool(true), fontSize: num(10), labelColor: color(TEXT2), showAxisTitle: bool(false), gridlineShow: bool(false) })],
+    legend: [props({ show: bool(true), position: str("Top"), fontSize: num(T_LABEL), labelColor: color(TEXT2) })],
+    categoryAxis: [props({ show: bool(true), fontSize: num(T_AXIS), labelColor: color(TEXT2), showAxisTitle: bool(false), gridlineShow: bool(false) })],
     valueAxis: [props({ show: bool(false), gridlineShow: bool(false), showAxisTitle: bool(false), start: num(0) })],
     layout: [props({ clusteredGapSize: num(opts.gap ?? 0) })],
   };
@@ -180,9 +198,9 @@ function varianceChart(seed, kind, category, m, title, pos, opts = {}) {
   const pct = m.endsWith("%");
   const objects = {
     dataPoint: [props({ fill: signColor(m) }, { data: [{ dataViewWildcard: { matchingOption: 1 } }] })],
-    labels: [props(pct ? { show: bool(true), labelPrecision: int(1), fontSize: num(9), color: color(TEXT) } : millionsLabels())],
+    labels: [props(pct ? { show: bool(true), labelPrecision: int(1), fontSize: num(T_LABEL - 1), color: color(TEXT), labelPosition: str("OutsideEnd") } : millionsLabels())],
     legend: [props({ show: bool(false) })],
-    categoryAxis: [props({ show: bool(true), fontSize: num(10), labelColor: color(TEXT2), showAxisTitle: bool(false), gridlineShow: bool(false) })],
+    categoryAxis: [props({ show: bool(true), fontSize: num(T_AXIS), labelColor: color(TEXT2), showAxisTitle: bool(false), gridlineShow: bool(false) })],
     valueAxis: [props({ show: bool(false), gridlineShow: bool(false), showAxisTitle: bool(false) })],
   };
   if (opts.rows) objects.smallMultiplesLayout = [props({ layoutType: str("custom"), rowCount: int(1), columnCount: int(2) })];
@@ -198,9 +216,9 @@ function waterfall(seed, category, title, pos) {
     query: { queryState: { Category: { projections: [category] }, Y: { projections: [mProj("ΔPY")] } }, sortDefinition: sortBy(measureExpr("ΔPY"), "Ascending") },
     objects: {
       sentimentColors: [props({ increaseFill: color(GOOD), decreaseFill: color(BAD), totalFill: color(AC) })],
-      labels: [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(10), color: color(TEXT) })],
+      labels: [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(T_LABEL), color: color(TEXT), labelPosition: str("OutsideEnd") })],
       legend: [props({ show: bool(false) })],
-      categoryAxis: [props({ show: bool(true), fontSize: num(10), labelColor: color(TEXT2), showAxisTitle: bool(false) })],
+      categoryAxis: [props({ show: bool(true), fontSize: num(T_AXIS), labelColor: color(TEXT2), showAxisTitle: bool(false) })],
       valueAxis: [props({ show: bool(false), showAxisTitle: bool(false) })],
     },
     visualContainerObjects: titleVco(title),
@@ -210,8 +228,8 @@ function waterfall(seed, category, title, pos) {
 // Table/matrix colour helpers
 const tableValueColors = (measures) => measures.map((m) => props({ fontColor: signColor(m) }, { data: [{ dataViewWildcard: { matchingOption: 1 } }], metadata: `Sales.${m}` }));
 const tableChrome = (rowPadding = 6) => ({
-  columnHeaders: [props({ fontSize: num(10), bold: bool(true), fontColor: color(TEXT), backColor: color("#FFFFFF"), autoSizeColumnWidth: bool(true), columnAdjustment: str("growToFit") })],
-  grid: [props({ gridHorizontal: bool(true), gridHorizontalColor: color(LINE), gridVertical: bool(false), rowPadding: num(rowPadding), textSize: num(11) })],
+  columnHeaders: [props({ fontSize: num(T_TABLE), bold: bool(true), fontColor: color(TEXT), backColor: color("#FFFFFF"), autoSizeColumnWidth: bool(true), columnAdjustment: str("growToFit") })],
+  grid: [props({ gridHorizontal: bool(true), gridHorizontalColor: color(LINE), gridVertical: bool(false), rowPadding: num(rowPadding), textSize: num(T_TABLE) })],
   total: [props({ fontColor: color(TEXT), bold: bool(true), backColor: color("#F3F2F1") })],
 });
 
@@ -233,7 +251,7 @@ function matrix(seed, rows, columns, measures, varianceMeasures, title, pos, sor
     query: { queryState: { Rows: { projections: [rows] }, Columns: { projections: [columns] }, Values: { projections: measures.map((m) => mProj(m)) } }, sortDefinition: sort },
     objects: {
       ...tableChrome(5),
-      rowHeaders: [props({ fontSize: num(11), fontColor: color(TEXT) })],
+      rowHeaders: [props({ fontSize: num(T_TABLE), fontColor: color(TEXT) })],
       values: [props({ backColorPrimary: color("#FFFFFF"), backColorSecondary: color("#FFFFFF"), fontColorPrimary: color(TEXT), fontColorSecondary: color(TEXT) }), ...tableValueColors(varianceMeasures)],
     },
     visualContainerObjects: { ...titleVco(title), stylePreset: [props({ name: str("None") })] },
@@ -254,8 +272,8 @@ function header(pageKey, title) {
   return [
     titleBox(`${pageKey}/title`, title, { x: M, y: 20, w: 1400, h: 48, z: 100 }),
     pageNav(`${pageKey}/nav`, { x: M, y: 76, w: 520, h: 36, z: 200 }),
-    dropdown(`${pageKey}/channel`, "Store", "Channel", "Channel", "ChannelSync", { x: 1464, y: 24, w: 200, h: 80, z: 300 }),
-    dropdown(`${pageKey}/country`, "Store", "Country", "Country", "CountrySync", { x: 1688, y: 24, w: 200, h: 80, z: 400 }),
+    dropdown(`${pageKey}/channel`, "Store", "Channel", "Channel", "ChannelSync", { x: 1464, y: 20, w: 200, h: 88, z: 300 }),
+    dropdown(`${pageKey}/country`, "Store", "Country", "Country", "CountrySync", { x: 1688, y: 20, w: 200, h: 88, z: 400 }),
   ];
 }
 
@@ -265,10 +283,7 @@ const pages = [
     displayName: "Overview",
     title: "2025 sales of $299.9M: 8% below last year and 14% below budget, but 2% ahead of the latest forecast",
     visuals: (k) => [
-      card(`${k}/kpi_ac`, ["AC", "PY", "BU", "FC"], { x: M, y: CONTENT_Y, w: 776, h: 120, z: 1000 }, { title: "Net sales 2025, $M" }),
-      card(`${k}/kpi_dpy`, ["ΔPY", "ΔPY %"], { x: 832, y: CONTENT_Y, w: 336, h: 120, z: 1100 }, { title: "vs last year (PY)", signMeasure: "ΔPY", accent: BAD }),
-      card(`${k}/kpi_dbu`, ["ΔBU", "ΔBU %"], { x: 1192, y: CONTENT_Y, w: 336, h: 120, z: 1200 }, { title: "vs budget (BU)", signMeasure: "ΔBU", accent: BAD }),
-      card(`${k}/kpi_dfc`, ["ΔFC", "ΔFC %"], { x: 1552, y: CONTENT_Y, w: 336, h: 120, z: 1300 }, { title: "vs latest forecast (FC)", signMeasure: "ΔFC", accent: GOOD }),
+      ...kpiStrip(k, CONTENT_Y),
       scenarioChart(`${k}/monthly`, "clusteredColumnChart", month, ["PY", "AC", "BU", "FC"], "Net sales by month, $M: AC vs PY, BU and FC (H1 −16% vs PY, H2 +1%)", { x: M, y: 272, w: 1240, h: 488, z: 2000 }, { sort: monthSort, gap: 20 }),
       varianceChart(`${k}/monthly_dpy`, "clusteredColumnChart", month, "ΔPY", "ΔPY by month, $M", { x: M, y: 784, w: 1240, h: 264, z: 3000 }, { sort: monthSort }),
       varianceChart(`${k}/channel_dpy`, "clusteredBarChart", channel, "ΔPY", "ΔPY by channel, $M", { x: 1296, y: 272, w: 592, h: 224, z: 4000 }),
@@ -295,13 +310,13 @@ const pages = [
     displayName: "Country",
     title: "Online and US stores account for the whole decline; every other country grew 7–30% on last year",
     visuals: (k) => [
-      varianceChart(`${k}/dpy`, "clusteredBarChart", country, "ΔPY", "ΔPY by country, $M", { x: M, y: CONTENT_Y, w: 597, h: 512, z: 1000 }),
-      varianceChart(`${k}/dbu`, "clusteredBarChart", country, "ΔBU", "ΔBU by country, $M", { x: 653, y: CONTENT_Y, w: 597, h: 512, z: 2000 }),
-      scenarioChart(`${k}/scenarios`, "clusteredBarChart", country, ["PY", "AC", "BU"], "Net sales by country, $M: AC vs PY and BU", { x: 1274, y: CONTENT_Y, w: 614, h: 512, z: 3000 }, { sort: sortBy(measureExpr("AC"), "Descending"), gap: 25 }),
+      varianceChart(`${k}/dpy`, "clusteredBarChart", country, "ΔPY", "ΔPY by country, $M", { x: M, y: CONTENT_Y, w: 597, h: 472, z: 1000 }),
+      varianceChart(`${k}/dbu`, "clusteredBarChart", country, "ΔBU", "ΔBU by country, $M", { x: 653, y: CONTENT_Y, w: 597, h: 472, z: 2000 }),
+      scenarioChart(`${k}/scenarios`, "clusteredBarChart", country, ["PY", "AC", "BU"], "Net sales by country, $M: AC vs PY and BU", { x: 1274, y: CONTENT_Y, w: 614, h: 472, z: 3000 }, { sort: sortBy(measureExpr("AC"), "Descending"), gap: 25 }),
       table(`${k}/scorecard`, [
         country, channel,
         mProj("AC"), mProj("PY"), mProj("ΔPY"), mProj("ΔPY %"), mProj("BU"), mProj("ΔBU"), mProj("ΔBU %"), mProj("FC"), mProj("ΔFC %"),
-      ], ["ΔPY", "ΔPY %", "ΔBU", "ΔBU %", "ΔFC %"], "Country scorecard", { x: M, y: 664, w: 1856, h: 384, z: 4000 }, { rowPadding: 4, sort: sortBy(measureExpr("ΔPY"), "Ascending") }),
+      ], ["ΔPY", "ΔPY %", "ΔBU", "ΔBU %", "ΔFC %"], "Country scorecard", { x: M, y: 624, w: 1856, h: 424, z: 4000 }, { rowPadding: 4, sort: sortBy(measureExpr("ΔPY"), "Ascending") }),
     ],
   },
   {
@@ -309,10 +324,10 @@ const pages = [
     displayName: "Category",
     title: "TV and Video fell 36% on last year in both channels; Cameras and Audio grew",
     visuals: (k) => [
-      varianceChart(`${k}/dpy`, "clusteredBarChart", category, "ΔPY", "ΔPY by category, $M", { x: M, y: CONTENT_Y, w: 916, h: 440, z: 1000 }),
-      varianceChart(`${k}/dbu`, "clusteredBarChart", category, "ΔBU", "ΔBU by category, $M", { x: 972, y: CONTENT_Y, w: 916, h: 440, z: 2000 }),
-      matrix(`${k}/matrix`, category, channel, ["AC", "ΔPY %"], ["ΔPY %"], "AC and ΔPY % by category and channel", { x: M, y: 592, w: 916, h: 456, z: 3000 }, sortBy(measureExpr("AC"), "Descending")),
-      scenarioChart(`${k}/scenarios`, "clusteredBarChart", category, ["PY", "AC", "BU"], "Net sales by category, $M: AC vs PY and BU", { x: 972, y: 592, w: 916, h: 456, z: 4000 }, { sort: sortBy(measureExpr("AC"), "Descending"), gap: 25 }),
+      varianceChart(`${k}/dpy`, "clusteredBarChart", category, "ΔPY", "ΔPY by category, $M", { x: M, y: CONTENT_Y, w: 916, h: 400, z: 1000 }),
+      varianceChart(`${k}/dbu`, "clusteredBarChart", category, "ΔBU", "ΔBU by category, $M", { x: 972, y: CONTENT_Y, w: 916, h: 400, z: 2000 }),
+      matrix(`${k}/matrix`, category, channel, ["AC", "ΔPY %"], ["ΔPY %"], "AC and ΔPY % by category and channel", { x: M, y: 552, w: 916, h: 496, z: 3000 }, sortBy(measureExpr("AC"), "Descending")),
+      scenarioChart(`${k}/scenarios`, "clusteredBarChart", category, ["PY", "AC", "BU"], "Net sales by category, $M: AC vs PY and BU", { x: 972, y: 552, w: 916, h: 496, z: 4000 }, { sort: sortBy(measureExpr("AC"), "Descending"), gap: 25 }),
     ],
   },
 ];
@@ -345,8 +360,8 @@ function buildTheme() {
       page: { "*": { background: [{ color: { solid: { color: "#FFFFFF" } }, transparency: 0 }], outspace: [{ color: { solid: { color: "#FFFFFF" } } }] } },
       slicer: {
         "*": {
-          header: [{ fontFamily: "Segoe UI Semibold", textSize: 10, fontColor: { solid: { color: TEXT } }, outlineStyle: 0 }],
-          items: [{ fontFamily: "Segoe UI", textSize: 10, fontColor: { solid: { color: TEXT } }, outlineStyle: 0, padding: 2 }],
+          header: [{ fontFamily: "Segoe UI Semibold", textSize: 12, fontColor: { solid: { color: TEXT } }, outlineStyle: 0 }],
+          items: [{ fontFamily: "Segoe UI", textSize: 12, fontColor: { solid: { color: TEXT } }, outlineStyle: 0, padding: 2 }],
         },
       },
     },

@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
-  "name": "b75cd8a82ca12fab3c30",
+  "name": "6b12bb61054d9cdfd109",
   "position": {
-    "x": 832,
+    "x": 960,
     "y": 128,
-    "z": 1100,
-    "height": 120,
-    "width": 336,
-    "tabOrder": 1100
+    "z": 1050,
+    "height": 112,
+    "width": 176,
+    "tabOrder": 1050
   },
   "visual": {
     "visualType": "cardVisual",
@@ -15,20 +15,6 @@
       "queryState": {
         "Data": {
           "projections": [
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Sales"
-                    }
-                  },
-                  "Property": "ΔPY"
-                }
-              },
-              "queryRef": "Sales.ΔPY",
-              "nativeQueryRef": "ΔPY"
-            },
             {
               "field": {
                 "Measure": {
@@ -54,14 +40,14 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "24D"
+                  "Value": "22D"
                 }
               }
             },
             "labelDisplayUnits": {
               "expr": {
                 "Literal": {
-                  "Value": "'0'"
+                  "Value": "'1'"
                 }
               }
             },
@@ -89,7 +75,7 @@
                                       "Entity": "Sales"
                                     }
                                   },
-                                  "Property": "ΔPY"
+                                  "Property": "ΔPY %"
                                 }
                               },
                               "Right": {
@@ -116,7 +102,7 @@
                                       "Entity": "Sales"
                                     }
                                   },
-                                  "Property": "ΔPY"
+                                  "Property": "ΔPY %"
                                 }
                               },
                               "Right": {
@@ -155,7 +141,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "11D"
+                  "Value": "12D"
                 }
               }
             },
@@ -245,8 +231,68 @@
               "solid": {
                 "color": {
                   "expr": {
-                    "Literal": {
-                      "Value": "'#C0392B'"
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 2,
+                              "Left": {
+                                "Measure": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "Sales"
+                                    }
+                                  },
+                                  "Property": "ΔPY %"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "0D"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2E8540'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 3,
+                              "Left": {
+                                "Measure": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "Sales"
+                                    }
+                                  },
+                                  "Property": "ΔPY %"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "0D"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#C0392B'"
+                            }
+                          }
+                        }
+                      ],
+                      "DefaultValue": {
+                        "Literal": {
+                          "Value": "'#605E5C'"
+                        }
+                      }
                     }
                   }
                 }
@@ -280,39 +326,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'vs last year (PY)'"
-                }
-              }
-            },
-            "fontFamily": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Segoe UI Semibold'"
-                }
-              }
-            },
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "11D"
-                }
-              }
-            },
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#605E5C'"
-                    }
-                  }
+                  "Value": "false"
                 }
               }
             }
@@ -431,7 +445,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "Filter57033f207211c70c6310fbb5",
+        "name": "Filter52102d4231376b7279d56d2c",
         "field": {
           "Column": {
             "Expression": {
