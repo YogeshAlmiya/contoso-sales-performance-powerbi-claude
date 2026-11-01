@@ -1,0 +1,7 @@
+EVALUATE
+SUMMARIZECOLUMNS (
+    ROLLUPADDISSUBTOTAL ( 'Store'[Country Code], "IsTotal" ),
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "AC", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" )
+)
+ORDER BY [IsTotal], 'Store'[Country Code]

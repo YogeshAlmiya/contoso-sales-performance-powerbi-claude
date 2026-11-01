@@ -71,3 +71,5 @@ table Product
 				in
 				    View
 
+	annotation PBI_ResultType = Table
+

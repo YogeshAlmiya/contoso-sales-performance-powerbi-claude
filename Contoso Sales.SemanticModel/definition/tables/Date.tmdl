@@ -21,6 +21,8 @@ table Date
 		summarizeBy: none
 		sourceColumn: Date
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	/// Calendar year. 2016 is partial (sales start 2016-05-18); 2025 is the latest complete year.
 	column Year
 		dataType: int64

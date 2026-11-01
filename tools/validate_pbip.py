@@ -221,7 +221,9 @@ def main() -> None:
 
         for mname, m in t["measures"].items():
             check(mname not in cols, f"MEASURE {tname}[{mname}]: name differs from columns in its table")
-            for prop in ("formatString", "displayFolder"):
+            # Image URL measures return text (an SVG data URI), so a number format does not apply
+            is_image = m["props"].get("dataCategory") == "ImageUrl"
+            for prop in ("displayFolder",) if is_image else ("formatString", "displayFolder"):
                 check(prop in m["props"], f"MEASURE {tname}[{mname}]: has {prop}")
             check(m["doc"], f"MEASURE {tname}[{mname}]: has description")
 

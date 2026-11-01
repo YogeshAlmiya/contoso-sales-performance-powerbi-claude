@@ -1,4 +1,4 @@
 /// Contoso sales performance 2025: actuals vs prior year, budget and forecast.
-database 'Contoso Sales'
+database
 	compatibilityLevel: 1702
 

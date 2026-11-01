@@ -7,9 +7,11 @@ model 'Contoso Sales'
 		legacyRedirects
 		returnErrorValuesAsNull
 
-annotation PBI_ProTooling = ["DevMode"]
+annotation PBI_ProTooling = ["DevMode","DaxQueryView_Desktop"]
 
 annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["Date","Product","Store","Sales","Plan","Plan Version","Server","Database"]
 
 ref table Date
 ref table Product

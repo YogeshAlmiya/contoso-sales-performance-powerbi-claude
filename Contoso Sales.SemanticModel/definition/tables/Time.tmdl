@@ -1,4 +1,5 @@
 table Time
+	lineageTag: f8091df7-d498-4b20-823e-98302d880c3c
 
 	/// Period-to-date variants applied to any measure. Current = the period in context. Combine with Scenario: Scenario is applied outside Time, so PY + YTD = previous-year YTD.
 	calculationGroup
@@ -19,6 +20,7 @@ table Time
 	/// Pick Current, MTD, QTD or YTD. With no selection, measures show the period in context.
 	column Time
 		dataType: string
+		lineageTag: d5751c9f-e114-4d6a-bb0f-6be04342e460
 		summarizeBy: none
 		sourceColumn: Name
 		sortByColumn: Ordinal

@@ -32,6 +32,102 @@ table Sales
 		displayFolder: Margin
 		lineageTag: 29bc4af4-bd2a-4b1e-9f20-ffd3820a3381
 
+	/// Net Sales with the Scenario item AC applied: actual net sales, USD. A wrapper so report visuals can show scenarios side by side without putting the Scenario calculation group on a legend.
+	measure AC = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" )
+		formatString: \$#,##0
+		displayFolder: Scenario measures
+		lineageTag: 4352f791-30c9-4b69-8bd1-0e0534a589fb
+
+	/// Net Sales with the Scenario item PY applied: actual net sales of the same period one year earlier, USD.
+	measure PY = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" )
+		formatString: \$#,##0
+		displayFolder: Scenario measures
+		lineageTag: d207066c-667b-4957-8ec7-309eda4fa6df
+
+	/// Net Sales with the Scenario item BU applied: budget, USD. Blank below plan grain (month x category x country).
+	measure BU = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU" )
+		formatString: \$#,##0
+		displayFolder: Scenario measures
+		lineageTag: 5b3af94c-4be3-40f7-a424-d93a2ab51c67
+
+	/// Net Sales with the Scenario item FC applied: latest forecast (Jan-Jun actuals, Jul-Dec forecast), USD. Blank below plan grain (month x category x country).
+	measure FC = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "FC" )
+		formatString: \$#,##0
+		displayFolder: Scenario measures
+		lineageTag: 7a22e9a5-c750-4041-be07-14f5dd555a76
+
+	/// Net Sales with the Scenario item ΔPY applied: AC minus PY, USD.
+	measure ΔPY = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔPY" )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Scenario measures
+		lineageTag: 9ddf70dd-fff7-413d-9eb3-cd846aa28fa3
+
+	/// Net Sales with the Scenario item ΔPY% applied: (AC minus PY) divided by PY.
+	measure 'ΔPY %' = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔPY%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Scenario measures
+		lineageTag: 69bcdb85-66b2-48c2-8ca0-db4afc64a0c1
+
+	/// Net Sales with the Scenario item ΔBU applied: AC minus BU, USD. Blank below plan grain.
+	measure ΔBU = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU" )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Scenario measures
+		lineageTag: 5b3dc48a-d151-4e19-9941-a4fa138c07d1
+
+	/// Net Sales with the Scenario item ΔBU% applied: (AC minus BU) divided by BU. Blank below plan grain.
+	measure 'ΔBU %' = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Scenario measures
+		lineageTag: 50159283-67a5-4d4a-94cf-031a4cfa87f1
+
+	/// Net Sales with the Scenario item ΔFC applied: AC minus FC, USD. Blank below plan grain.
+	measure ΔFC = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔFC" )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Scenario measures
+		lineageTag: 9126bb77-bf6e-4f56-a844-c359f1fe2c0e
+
+	/// Net Sales with the Scenario item ΔFC% applied: (AC minus FC) divided by FC. Blank below plan grain.
+	measure 'ΔFC %' = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔFC%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Scenario measures
+		lineageTag: a5efa88d-e59f-4c2a-b961-b8b15420e301
+
+	/// SVG image of IBCS scenario bars for one row of a table: PY solid light grey, AC solid dark grey, BU outlined, FC hatched, on a scale shared by the rows shown. Blank on total rows. Used in the Channel scorecard.
+	measure 'Scenario Bars SVG' =
+			VAR _ac = [AC]
+			VAR _py = [PY]
+			VAR _bu = [BU]
+			VAR _fc = [FC]
+			VAR _max =
+			    MAXX (
+			        ALLSELECTED ( 'Store'[Channel] ),
+			        MAX ( MAX ( [AC], [PY] ), MAX ( [BU], [FC] ) )
+			    )
+			VAR _scale = DIVIDE ( 270, _max )
+			VAR _wPY = FORMAT ( _py * _scale, "0.0" )
+			VAR _wAC = FORMAT ( _ac * _scale, "0.0" )
+			VAR _wBU = FORMAT ( MAX ( _bu * _scale - 1.5, 0 ), "0.0" )
+			VAR _wFC = FORMAT ( MAX ( _fc * _scale - 1.5, 0 ), "0.0" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'>"
+			        & "<defs><pattern id='h' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='5' height='5' fill='white'/><line x1='0' y1='0' x2='0' y2='5' stroke='%23404040' stroke-width='2'/></pattern></defs>"
+			        & "<g font-family='Segoe UI' font-size='10' fill='%23605E5C'>"
+			        & "<text x='0' y='12'>PY</text><text x='0' y='26'>AC</text><text x='0' y='40'>BU</text><text x='0' y='54'>FC</text></g>"
+			        & "<rect x='24' y='3' width='" & _wPY & "' height='10' fill='%23C8C8C8'/>"
+			        & "<rect x='24' y='17' width='" & _wAC & "' height='10' fill='%23404040'/>"
+			        & "<rect x='24.75' y='31.75' width='" & _wBU & "' height='8.5' fill='white' stroke='%23404040' stroke-width='1.5'/>"
+			        & "<rect x='24.75' y='45.75' width='" & _wFC & "' height='8.5' fill='url(%23h)' stroke='%23404040' stroke-width='1.5'/>"
+			        & "</svg>"
+			RETURN
+			    IF (
+			        ISINSCOPE ( 'Store'[Channel] ) && NOT ISBLANK ( _ac ),
+			        "data:image/svg+xml;utf8," & _svg
+			    )
+		displayFolder: Report visuals
+		lineageTag: 8fda3cf2-b33c-42a9-8e2e-b552bc798a2b
+		dataCategory: ImageUrl
+
 	/// Order date key yyyymmdd.
 	column 'Date Key'
 		dataType: int64

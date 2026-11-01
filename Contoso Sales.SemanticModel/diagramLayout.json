@@ -1,0 +1,124 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 56.373325889555794
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 620.84194639450357,
+            "y": 820.40653354841947
+          },
+          "nodeIndex": "Sales",
+          "nodeLineageTag": "e41b475d-f1a4-4d80-a104-7c11d35ecfa9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50.217954518668193,
+            "y": 737.31547534322681
+          },
+          "nodeIndex": "Date",
+          "nodeLineageTag": "de04ec11-92bc-47d1-a880-d8f9cf455afe",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 398.29736862587242
+          },
+          "nodeIndex": "Plan",
+          "nodeLineageTag": "65b54d23-5d1c-4656-a7a2-6e5753f6967c",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 336.44798549517,
+            "y": 667.04285938706141
+          },
+          "nodeIndex": "Plan Version",
+          "nodeLineageTag": "55a5f6d4-02ed-4b6a-8251-ea8eda31d878",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 246.05801696486583,
+            "y": -50
+          },
+          "nodeIndex": "Product",
+          "nodeLineageTag": "229433ce-36da-4288-b062-6581152a59df",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1050.8026615065414,
+            "y": 521.20326677420974
+          },
+          "nodeIndex": "Scenario",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 816.80266150654131,
+            "y": 466.77275823576656
+          },
+          "nodeIndex": "Store",
+          "nodeLineageTag": "c67d0a0c-6cce-4bab-9f4b-0f3e1e1980d5",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1334.8026615065414,
+            "y": 521.20326677420974
+          },
+          "nodeIndex": "Time",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 70.955543900968848,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}
