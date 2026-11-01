@@ -47,18 +47,18 @@ GO
 
 -- T4  2025 by channel: AC, BU, FC, PY and variances
 WITH a AS (
-    SELECT CASE WHEN st.CountryCode = N'--' THEN N'Online' ELSE N'Store' END Channel,
+    SELECT CASE WHEN st.CountryCode = N'--' THEN N'Online' ELSE N'Stores' END Channel,
            SUM(CASE WHEN YEAR(s.OrderDate) = 2025 THEN s.Quantity * s.NetPrice END) AC,
            SUM(CASE WHEN YEAR(s.OrderDate) = 2024 THEN s.Quantity * s.NetPrice END) PY
     FROM Data.Sales s JOIN Data.Store st ON st.StoreKey = s.StoreKey
     WHERE s.OrderDate >= '2024-01-01' AND s.OrderDate < '2026-01-01'
-    GROUP BY CASE WHEN st.CountryCode = N'--' THEN N'Online' ELSE N'Store' END
+    GROUP BY CASE WHEN st.CountryCode = N'--' THEN N'Online' ELSE N'Stores' END
 ), p AS (
-    SELECT CASE WHEN CountryCode = N'ONL' THEN N'Online' ELSE N'Store' END Channel,
+    SELECT CASE WHEN CountryCode = N'ONL' THEN N'Online' ELSE N'Stores' END Channel,
            SUM(CASE WHEN Scenario = N'BU' THEN SalesAmountUSD END) BU,
            SUM(CASE WHEN Scenario = N'FC' THEN SalesAmountUSD END) FC
     FROM model.PlanSales
-    GROUP BY CASE WHEN CountryCode = N'ONL' THEN N'Online' ELSE N'Store' END
+    GROUP BY CASE WHEN CountryCode = N'ONL' THEN N'Online' ELSE N'Stores' END
 ), j AS (
     SELECT a.Channel, a.AC, a.PY, p.BU, p.FC FROM a JOIN p ON p.Channel = a.Channel
     UNION ALL

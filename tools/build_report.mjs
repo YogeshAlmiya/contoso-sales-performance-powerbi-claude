@@ -171,10 +171,14 @@ const scenarioDataPoint = (measures) => measures.map((m) => {
   return props({ fill: color(AC), fillTransparency: num(60), borderShow: bool(true), borderColor: color(AC), borderSize: num(1.5) }, s); // FC: tinted AC with outline, standing in for IBCS hatching
 });
 
+// Responsive charts shrink their text when the visual is small; keep the set font sizes instead
+const FIXED_TEXT = [props({ responsive: bool(false) })];
+
 function scenarioChart(seed, kind, category, measures, title, pos, opts = {}) {
   const queryState = { Category: { projections: [category] }, Y: { projections: measures.map((m) => mProj(m)) } };
   if (opts.rows) queryState.Rows = { projections: [opts.rows] };
-  const labels = [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(T_LABEL - 1), color: color(TEXT), labelPosition: str("OutsideEnd") })];
+  // AC labels sit over the neighbouring PY/BU/FC bars, so give them an opaque background (white by default)
+  const labels = [props({ show: bool(true), labelDisplayUnits: num(1000000), labelPrecision: int(1), fontSize: num(T_LABEL), color: color(TEXT), labelPosition: str("OutsideEnd"), enableBackground: bool(true), backgroundTransparency: num(0) })];
   for (const m of measures) if (m !== "AC") labels.push(props({ show: bool(false) }, { metadata: `Sales.${m}` }));
   const objects = {
     dataPoint: scenarioDataPoint(measures),
@@ -183,6 +187,7 @@ function scenarioChart(seed, kind, category, measures, title, pos, opts = {}) {
     categoryAxis: [props({ show: bool(true), fontSize: num(T_AXIS), labelColor: color(TEXT2), showAxisTitle: bool(false), gridlineShow: bool(false) })],
     valueAxis: [props({ show: bool(false), gridlineShow: bool(false), showAxisTitle: bool(false), start: num(0) })],
     layout: [props({ clusteredGapSize: num(opts.gap ?? 0) })],
+    general: FIXED_TEXT,
   };
   if (opts.rows) objects.smallMultiplesLayout = [props({ layoutType: str("custom"), rowCount: int(1), columnCount: int(2) })];
   return container(seed, kind, pos, {
@@ -202,6 +207,7 @@ function varianceChart(seed, kind, category, m, title, pos, opts = {}) {
     legend: [props({ show: bool(false) })],
     categoryAxis: [props({ show: bool(true), fontSize: num(T_AXIS), labelColor: color(TEXT2), showAxisTitle: bool(false), gridlineShow: bool(false) })],
     valueAxis: [props({ show: bool(false), gridlineShow: bool(false), showAxisTitle: bool(false) })],
+    general: FIXED_TEXT,
   };
   if (opts.rows) objects.smallMultiplesLayout = [props({ layoutType: str("custom"), rowCount: int(1), columnCount: int(2) })];
   return container(seed, kind, pos, {
@@ -220,6 +226,7 @@ function waterfall(seed, category, title, pos) {
       legend: [props({ show: bool(false) })],
       categoryAxis: [props({ show: bool(true), fontSize: num(T_AXIS), labelColor: color(TEXT2), showAxisTitle: bool(false) })],
       valueAxis: [props({ show: bool(false), showAxisTitle: bool(false) })],
+      general: FIXED_TEXT,
     },
     visualContainerObjects: titleVco(title),
   }, { filterConfig: yearFilter(seed) });
