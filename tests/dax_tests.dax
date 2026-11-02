@@ -1,6 +1,7 @@
 // Contoso Sales: key measure tests.
 // Run one test at a time in Power BI Desktop > DAX query view: select the block and press Run.
-// Each test has a matching SQL query in tests/sql_expected.sql that computes the same numbers from Data.* (T8b checks the SVG images, so it has none).
+// Each test has a matching SQL query in tests/sql_expected.sql that computes the same numbers from Data.* (T8b checks the SVG images and
+// the last T11 rows check headline wording under filters, so they have none).
 
 // ---------------------------------------------------------------------------
 // T1  AC 2025 by country (ONL = online store). SQL total: 299,946,187.09
@@ -108,7 +109,7 @@ EVALUATE
 
 // ---------------------------------------------------------------------------
 // T8  Comparison switch (Compare with slicer), 2025. Expected: CMP, ΔCMP and ΔCMP % equal
-//     PY, BU or FC and their variances; with nothing selected they equal PY.
+//     PY, BU or FC and their variances; with nothing selected they equal BU (the report default).
 //     SQL: PY 325,037,485.19, BU 349,547,870.51, FC 292,773,870.73 (see T4 totals)
 // ---------------------------------------------------------------------------
 EVALUATE
@@ -118,7 +119,7 @@ UNION (
         "CMP", CALCULATE ( [CMP], 'Date'[Year] = 2025 ),
         "ΔCMP", CALCULATE ( [ΔCMP], 'Date'[Year] = 2025 ),
         "ΔCMP %", CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025 ),
-        "Scenario measure", CALCULATE ( [PY], 'Date'[Year] = 2025 )
+        "Scenario measure", CALCULATE ( [BU], 'Date'[Year] = 2025 )
     ),
     SELECTCOLUMNS (
         { "PY", "BU", "FC" },
@@ -131,26 +132,120 @@ UNION (
 )
 
 // ---------------------------------------------------------------------------
-// T8b SVG hero measures return an SVG image under slicer filters. Expected: every row starts
-//     with data:image/svg+xml and has a length > 0; the Channel image shows only Stores for Germany.
+// T8b SVG measures return a complete SVG image under slicer filters. Expected: every row is SVG, ends with
+//     </svg>, has no raw # (colours must be written %23 inside the data URI) and no double-escaped entity
+//     (%2523: escaping % a second time breaks entities such as &%238594; and the image does not render).
 // ---------------------------------------------------------------------------
 EVALUATE
 VAR _cases =
     {
-        ( "Monthly, PY, no filter", CALCULATE ( [Monthly Hero SVG] ) ),
-        ( "Monthly, BU, Online", CALCULATE ( [Monthly Hero SVG], 'Comparison'[Comparison] = "BU", 'Store'[Channel] = "Online" ) ),
-        ( "Monthly, FC, Germany", CALCULATE ( [Monthly Hero SVG], 'Comparison'[Comparison] = "FC", 'Store'[Country] = "Germany" ) ),
-        ( "Channel, PY, no filter", CALCULATE ( [Channel Hero SVG] ) ),
-        ( "Channel, BU, Online", CALCULATE ( [Channel Hero SVG], 'Comparison'[Comparison] = "BU", 'Store'[Channel] = "Online" ) ),
-        ( "Channel, FC, Germany", CALCULATE ( [Channel Hero SVG], 'Comparison'[Comparison] = "FC", 'Store'[Country] = "Germany" ) )
+        ( "Monthly hero, BU", CALCULATE ( [Monthly Hero SVG], 'Date'[Year] = 2025 ) ),
+        ( "Monthly hero, PY, Online", CALCULATE ( [Monthly Hero SVG], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY", 'Store'[Channel] = "Online" ) ),
+        ( "Monthly hero, FC, Germany", CALCULATE ( [Monthly Hero SVG], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "FC", 'Store'[Country] = "Germany" ) ),
+        ( "Focus channel monthly, BU", CALCULATE ( [Focus Channel Monthly SVG], 'Date'[Year] = 2025 ) ),
+        ( "Focus channel monthly, FC", CALCULATE ( [Focus Channel Monthly SVG], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "FC" ) ),
+        ( "KPI Sales, BU", CALCULATE ( [KPI Sales SVG], 'Date'[Year] = 2025 ) ),
+        ( "KPI Sales, PY, Online", CALCULATE ( [KPI Sales SVG], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY", 'Store'[Channel] = "Online" ) ),
+        ( "KPI Margin, BU", CALCULATE ( [KPI Margin SVG], 'Date'[Year] = 2025 ) ),
+        ( "KPI Margin %, PY", CALCULATE ( [KPI Margin % SVG], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY" ) ),
+        ( "KPI FC", CALCULATE ( [KPI FC SVG], 'Date'[Year] = 2025 ) ),
+        ( "Margin bridge", CALCULATE ( [Margin Bridge SVG], 'Date'[Year] = 2025 ) ),
+        ( "Margin bridge, Germany", CALCULATE ( [Margin Bridge SVG], 'Date'[Year] = 2025, 'Store'[Country] = "Germany" ) ),
+        ( "Outlook monthly", CALCULATE ( [Outlook Monthly SVG], 'Date'[Year] = 2025 ) ),
+        ( "Outlook pace", CALCULATE ( [Outlook Pace SVG], 'Date'[Year] = 2025 ) ),
+        ( "Tooltip, Computers", CALCULATE ( [Tooltip Monthly SVG], 'Date'[Year] = 2025, 'Product'[Category] = "Computers" ) ),
+        ( "IBCS legend", [IBCS Legend SVG] )
     }
 RETURN
     SELECTCOLUMNS (
         _cases,
         "Case", [Value1],
         "Is SVG", LEFT ( [Value2], 18 ) = "data:image/svg+xml",
-        "Length", LEN ( [Value2] ),
-        "Shows Online", CONTAINSSTRING ( [Value2], ">Online<" ),
-        "Shows Stores", CONTAINSSTRING ( [Value2], ">Stores<" ),
-        "Shows Total", CONTAINSSTRING ( [Value2], ">Total<" )
+        "Complete", RIGHT ( [Value2], 6 ) = "</svg>",
+        "No raw #", NOT CONTAINSSTRING ( [Value2], "#" ),
+        "No double escape", NOT CONTAINSSTRING ( [Value2], "%2523" ),
+        "Length", LEN ( [Value2] )
     )
+
+// ---------------------------------------------------------------------------
+// T9  Margin bridge PY -> AC 2025 by channel and total, at product grain. Volume + Mix + Price + Unit cost = ΔPY margin.
+//     SQL total: GM PY 181,687,693.57, GM AC 168,083,538.01
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    ROLLUPADDISSUBTOTAL ( 'Store'[Channel], "IsTotal" ),
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "GM PY", [Gross Margin PY],
+    "Volume", [Margin Volume Effect],
+    "Mix", [Margin Mix Effect],
+    "Price", [Margin Price Effect],
+    "Unit cost", [Margin Unit Cost Effect],
+    "GM AC", [Gross Margin],
+    "ΔGM", [Gross Margin ΔPY]
+)
+ORDER BY [IsTotal], 'Store'[Channel]
+
+// ---------------------------------------------------------------------------
+// T10 Products driver table 2025 (Compare with = BU): AC, ΔBU, ΔBU %, and units, average price,
+//     unit cost and margin rate vs PY (the plan has no units)
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    ROLLUPADDISSUBTOTAL ( 'Product'[Category], "IsTotal" ),
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    TREATAS ( { "BU" }, 'Comparison'[Comparison] ),
+    "Sales AC", [AC],
+    "ΔBU", [ΔCMP],
+    "ΔBU %", [ΔCMP %],
+    "Units ΔPY %", [Units ΔPY %],
+    "Avg price ΔPY %", [Avg Net Price ΔPY %],
+    "Unit cost ΔPY %", [Avg Unit Cost ΔPY %],
+    "Margin % ΔPY pp", [Gross Margin % ΔPY pp]
+)
+ORDER BY [IsTotal], 'Product'[Category]
+
+// ---------------------------------------------------------------------------
+// T11 Page headlines 2025. The first rows have an expected text in SQL built from the same numbers;
+//     the rows marked (read) check the wording under filters and clicks.
+// ---------------------------------------------------------------------------
+EVALUATE
+VAR _cases =
+    {
+        ( 1, "Overview, BU", CALCULATE ( [Headline Overview], 'Date'[Year] = 2025 ) ),
+        ( 2, "Overview, PY", CALCULATE ( [Headline Overview], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY" ) ),
+        ( 3, "Overview, FC", CALCULATE ( [Headline Overview], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "FC" ) ),
+        ( 4, "Channels, BU", CALCULATE ( [Headline Channels], 'Date'[Year] = 2025 ) ),
+        ( 5, "Channels, PY", CALCULATE ( [Headline Channels], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY" ) ),
+        ( 6, "Channels, FC", CALCULATE ( [Headline Channels], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "FC" ) ),
+        ( 7, "Products, BU", CALCULATE ( [Headline Products], 'Date'[Year] = 2025 ) ),
+        ( 8, "Regions, BU", CALCULATE ( [Headline Regions], 'Date'[Year] = 2025 ) ),
+        ( 9, "Margin, BU", CALCULATE ( [Headline Margin], 'Date'[Year] = 2025 ) ),
+        ( 10, "Margin, PY", CALCULATE ( [Headline Margin], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY" ) ),
+        ( 11, "Outlook, BU", CALCULATE ( [Headline Outlook], 'Date'[Year] = 2025 ) ),
+        ( 12, "Focus channel, BU", CALCULATE ( [Focus Channel], 'Date'[Year] = 2025 ) ),
+        ( 13, "Focus channel, PY", CALCULATE ( [Focus Channel], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY" ) ),
+        ( 14, "Focus channel, FC", CALCULATE ( [Focus Channel], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "FC" ) ),
+        ( 15, "(read) Overview, BU, Channel = Online", CALCULATE ( [Headline Overview], 'Date'[Year] = 2025, 'Store'[Channel] = "Online" ) ),
+        ( 16, "(read) Channels, BU, Country = Germany", CALCULATE ( [Headline Channels], 'Date'[Year] = 2025, 'Store'[Country] = "Germany" ) ),
+        ( 17, "(read) Products, BU, click Computers", CALCULATE ( [Headline Products], 'Date'[Year] = 2025, 'Product'[Category] = "Computers" ) ),
+        ( 18, "(read) Regions, PY, Channel = Stores", CALCULATE ( [Headline Regions], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY", 'Store'[Channel] = "Stores" ) ),
+        ( 19, "(read) Margin, PY, Country = Germany", CALCULATE ( [Headline Margin], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "PY", 'Store'[Country] = "Germany" ) ),
+        ( 20, "(read) Outlook, FC, Channel = Online", CALCULATE ( [Headline Outlook], 'Date'[Year] = 2025, 'Comparison'[Comparison] = "FC", 'Store'[Channel] = "Online" ) ),
+        ( 21, "(read) Subtitle Products, Online + Computers", CALCULATE ( [Subtitle Products], 'Date'[Year] = 2025, 'Store'[Channel] = "Online", 'Product'[Category] = "Computers" ) )
+    }
+RETURN
+    SELECTCOLUMNS ( _cases, "#", [Value1], "Case", [Value2], "Headline", [Value3] )
+ORDER BY [#]
+
+// ---------------------------------------------------------------------------
+// T12 End labels of the margin rate chart: the two Last Month measures are blank in Jan-Nov and equal the
+//     margin rate (AC) and last year's rate (PY) in Dec 2025. SQL: Dec 2025 and Dec 2024 margin rates.
+// ---------------------------------------------------------------------------
+EVALUATE
+SUMMARIZECOLUMNS (
+    'Date'[Month Number],
+    TREATAS ( { 2025 }, 'Date'[Year] ),
+    "AC last month", [Gross Margin % Last Month],
+    "PY last month", [Gross Margin % PY Last Month]
+)
+ORDER BY 'Date'[Month Number]

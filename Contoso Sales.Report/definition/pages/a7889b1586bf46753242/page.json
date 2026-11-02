@@ -1,0 +1,146 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "a7889b1586bf46753242",
+  "displayName": "Outlook",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#F3F4F6'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filtere359a4b393aac0932cb9ed2a",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Date"
+              }
+            },
+            "Property": "Year"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "d",
+              "Entity": "Date",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "d"
+                          }
+                        },
+                        "Property": "Year"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "2025L"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User",
+        "isHiddenInViewMode": true,
+        "isLockedInViewMode": true
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "f4268514a75291f82735",
+      "target": "fca95f61f8fa9b20e1bb",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f4268514a75291f82735",
+      "target": "374a4d7b9adf4952bacc",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f4268514a75291f82735",
+      "target": "c39943d49a4a6b960fdf",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f4268514a75291f82735",
+      "target": "949e8515e00d48faedf3",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f4268514a75291f82735",
+      "target": "7625e97b7b0ea5e49e09",
+      "type": "DataFilter"
+    },
+    {
+      "source": "7625e97b7b0ea5e49e09",
+      "target": "fca95f61f8fa9b20e1bb",
+      "type": "DataFilter"
+    },
+    {
+      "source": "7625e97b7b0ea5e49e09",
+      "target": "374a4d7b9adf4952bacc",
+      "type": "DataFilter"
+    },
+    {
+      "source": "7625e97b7b0ea5e49e09",
+      "target": "c39943d49a4a6b960fdf",
+      "type": "DataFilter"
+    },
+    {
+      "source": "7625e97b7b0ea5e49e09",
+      "target": "949e8515e00d48faedf3",
+      "type": "DataFilter"
+    },
+    {
+      "source": "7625e97b7b0ea5e49e09",
+      "target": "f4268514a75291f82735",
+      "type": "DataFilter"
+    }
+  ]
+}

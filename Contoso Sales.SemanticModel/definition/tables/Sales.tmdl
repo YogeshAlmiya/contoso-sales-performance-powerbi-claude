@@ -92,316 +92,1242 @@ table Sales
 		displayFolder: Scenario measures
 		lineageTag: a5efa88d-e59f-4c2a-b961-b8b15420e301
 
-	/// SVG image of IBCS scenario bars for one row of a table: PY solid light grey, AC solid dark grey, BU outlined, FC hatched, on a scale shared by the rows shown. Blank on total rows. Used in the Channel scorecard.
-	measure 'Scenario Bars SVG' =
-			VAR _ac = [AC]
-			VAR _py = [PY]
-			VAR _bu = [BU]
-			VAR _fc = [FC]
-			VAR _max =
-			    MAXX (
-			        ALLSELECTED ( 'Store'[Channel] ),
-			        MAX ( MAX ( [AC], [PY] ), MAX ( [BU], [FC] ) )
-			    )
-			VAR _scale = DIVIDE ( 270, _max )
-			VAR _wPY = FORMAT ( _py * _scale, "0.0" )
-			VAR _wAC = FORMAT ( _ac * _scale, "0.0" )
-			VAR _wBU = FORMAT ( MAX ( _bu * _scale - 1.5, 0 ), "0.0" )
-			VAR _wFC = FORMAT ( MAX ( _fc * _scale - 1.5, 0 ), "0.0" )
-			VAR _svg =
-			    "<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'>"
-			        & "<defs><pattern id='h' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
-			        & "<rect width='5' height='5' fill='white'/><line x1='0' y1='0' x2='0' y2='5' stroke='%23404040' stroke-width='2'/></pattern></defs>"
-			        & "<g font-family='Segoe UI' font-size='10' fill='%23605E5C'>"
-			        & "<text x='0' y='12'>PY</text><text x='0' y='26'>AC</text><text x='0' y='40'>BU</text><text x='0' y='54'>FC</text></g>"
-			        & "<rect x='24' y='3' width='" & _wPY & "' height='10' fill='%23C8C8C8'/>"
-			        & "<rect x='24' y='17' width='" & _wAC & "' height='10' fill='%23404040'/>"
-			        & "<rect x='24.75' y='31.75' width='" & _wBU & "' height='8.5' fill='white' stroke='%23404040' stroke-width='1.5'/>"
-			        & "<rect x='24.75' y='45.75' width='" & _wFC & "' height='8.5' fill='url(%23h)' stroke='%23404040' stroke-width='1.5'/>"
-			        & "</svg>"
-			RETURN
-			    IF (
-			        ISINSCOPE ( 'Store'[Channel] ) && NOT ISBLANK ( _ac ),
-			        "data:image/svg+xml;utf8," & _svg
-			    )
-		displayFolder: Report visuals
-		lineageTag: 8fda3cf2-b33c-42a9-8e2e-b552bc798a2b
-		dataCategory: ImageUrl
+	/// Average net price per unit sold, USD: net sales divided by units. AC and PY only (the plan has no units). List prices per product did not change in 2025, so its change mostly reflects product mix.
+	measure 'Avg Net Price' = DIVIDE ( [Net Sales], [Sales Quantity] )
+		formatString: \$#,##0.00
+		displayFolder: Sales
+		lineageTag: 32a39f5e-07d8-439a-a390-f7a5b153e112
 
-	/// Comparison chosen in the report's Compare with slicer: PY, BU or FC. PY when nothing or more than one is selected. Text, used by the comparison measures and dynamic titles.
-	measure 'Comparison Label' = SELECTEDVALUE ( 'Comparison'[Comparison], "PY" )
+	/// Average cost per unit sold, USD: cost divided by units. AC and PY only.
+	measure 'Avg Unit Cost' = DIVIDE ( [Cost], [Sales Quantity] )
+		formatString: \$#,##0.00
+		displayFolder: Margin
+		lineageTag: a0fb9633-d195-4ba2-96da-5a280e480117
+
+	/// Units sold vs the same period last year, in %. Compared with PY because the plan has no units.
+	measure 'Units ΔPY %' = CALCULATE ( [Sales Quantity], 'Scenario'[Scenario] = "ΔPY%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Drivers vs PY
+		lineageTag: a9d71987-c279-4a6e-b0d9-ada3ad4e62af
+
+	/// Average net price per unit vs the same period last year, in %. Reflects product mix and discounts (list prices per product did not change in 2025).
+	measure 'Avg Net Price ΔPY %' = CALCULATE ( [Avg Net Price], 'Scenario'[Scenario] = "ΔPY%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Drivers vs PY
+		lineageTag: bbdb6981-81a6-40cf-810b-947234ca3065
+
+	/// Average cost per unit vs the same period last year, in %. A rise is bad for margin.
+	measure 'Avg Unit Cost ΔPY %' = CALCULATE ( [Avg Unit Cost], 'Scenario'[Scenario] = "ΔPY%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Drivers vs PY
+		lineageTag: d1403a0a-62b9-4200-9d2f-ad5d8ded3e08
+
+	/// Gross margin of the same period last year, USD.
+	measure 'Gross Margin PY' = CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "PY" )
+		formatString: \$#,##0
+		displayFolder: Margin
+		lineageTag: ad6c64f8-143b-4a0e-8e4d-d773d7428764
+
+	/// Gross margin minus last year's gross margin, USD. Equals the sum of the four margin bridge effects.
+	measure 'Gross Margin ΔPY' = CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "ΔPY" )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Margin
+		lineageTag: 728b7c22-c466-4367-bd10-fd6dd455150e
+
+	/// Gross margin vs last year, in %.
+	measure 'Gross Margin ΔPY %' = CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "ΔPY%" )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Margin
+		lineageTag: 72c26ba9-2808-4282-8f25-e01e7d37ed9d
+
+	/// Gross margin rate of the same period last year.
+	measure 'Gross Margin % PY' = CALCULATE ( [Gross Margin %], 'Scenario'[Scenario] = "PY" )
+		formatString: 0.0%
+		displayFolder: Margin
+		lineageTag: 0b0e4609-fb80-448b-9839-b4ae9171457a
+
+	/// Gross margin rate in the last month with sales in the selected period, blank in the other months. Labels the end of the AC line in the margin rate chart.
+	measure 'Gross Margin % Last Month' =
+			VAR _month = SELECTEDVALUE ( 'Date'[Month Number] )
+			VAR _last =
+			    CALCULATE (
+			        MAXX ( FILTER ( VALUES ( 'Date'[Month Number] ), NOT ISBLANK ( [Gross Margin %] ) ), 'Date'[Month Number] ),
+			        ALLSELECTED ( 'Date' )
+			    )
+			RETURN
+			    IF ( _month = _last, [Gross Margin %] )
+		formatString: 0.0%
+		displayFolder: Margin
+		lineageTag: 8e229230-6d59-4b01-a31c-ab750fc182e9
+
+	/// Gross margin rate of the same period last year in the last month with sales in the selected period, blank in the other months. Labels the end of the PY line in the margin rate chart.
+	measure 'Gross Margin % PY Last Month' =
+			VAR _month = SELECTEDVALUE ( 'Date'[Month Number] )
+			VAR _last =
+			    CALCULATE (
+			        MAXX ( FILTER ( VALUES ( 'Date'[Month Number] ), NOT ISBLANK ( [Gross Margin %] ) ), 'Date'[Month Number] ),
+			        ALLSELECTED ( 'Date' )
+			    )
+			RETURN
+			    IF ( _month = _last, [Gross Margin % PY] )
+		formatString: 0.0%
+		displayFolder: Margin
+		lineageTag: ac9b6356-b1dc-4a13-8f31-c58b6f7519f2
+
+	/// Gross margin rate minus last year's rate, in percentage points (pp). Changes that round to 0.0 pp return 0, so labels never show -0.0 pp.
+	measure 'Gross Margin % ΔPY pp' =
+			VAR _actual = [Gross Margin %]
+			VAR _previousYear = [Gross Margin % PY]
+			VAR _pp = ( _actual - _previousYear ) * 100
+			RETURN
+			    IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _previousYear ), IF ( ROUND ( _pp, 1 ) = 0, 0, _pp ) )
+		formatString: +0.0 \p\p;-0.0 \p\p;0.0 \p\p
+		displayFolder: Margin
+		lineageTag: 109322d1-2464-45a0-a530-49c3f2074d6a
+
+	/// Margin bridge PY to AC, volume step: the change in units sold valued at last year's average margin per unit, USD, rounded to the cent.
+	measure 'Margin Volume Effect' =
+			VAR _units = [Sales Quantity]
+			VAR _unitsPY = CALCULATE ( [Sales Quantity], 'Scenario'[Scenario] = "PY" )
+			VAR _marginPY = [Gross Margin PY]
+			RETURN
+			    -- divide as double: a currency divided by units is rounded to 4 decimals before it is multiplied back up
+			    IF ( _unitsPY > 0, ROUND ( ( _units - _unitsPY ) * DIVIDE ( CONVERT ( _marginPY, DOUBLE ), _unitsPY ), 2 ) )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Margin bridge
+		lineageTag: 2b66fb6d-9751-4a28-aa87-840a07368bde
+
+	/// Margin bridge PY to AC, price step: for products sold in both years, this year's units times the change in net price per unit (list price and discount), USD, rounded to the cent.
+	measure 'Margin Price Effect' =
+			VAR _products =
+			    ADDCOLUMNS (
+			        VALUES ( 'Product'[Product Key] ),
+			        "@units", [Sales Quantity],
+			        "@sales", [Net Sales],
+			        "@unitsPY", CALCULATE ( [Sales Quantity], 'Scenario'[Scenario] = "PY" ),
+			        "@salesPY", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" )
+			    )
+			VAR _effect =
+			    SUMX (
+			        FILTER ( _products, [@units] > 0 && [@unitsPY] > 0 ),
+			        [@sales] - [@units] * DIVIDE ( CONVERT ( [@salesPY], DOUBLE ), [@unitsPY] )
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( _effect ), ROUND ( _effect, 2 ) )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Margin bridge
+		lineageTag: dc491a19-af8c-426a-973c-69f20cea6b83
+
+	/// Margin bridge PY to AC, unit cost step: for products sold in both years, this year's units times the change in cost per unit, with higher costs negative, USD, rounded to the cent.
+	measure 'Margin Unit Cost Effect' =
+			VAR _products =
+			    ADDCOLUMNS (
+			        VALUES ( 'Product'[Product Key] ),
+			        "@units", [Sales Quantity],
+			        "@cost", [Cost],
+			        "@unitsPY", CALCULATE ( [Sales Quantity], 'Scenario'[Scenario] = "PY" ),
+			        "@costPY", CALCULATE ( [Cost], 'Scenario'[Scenario] = "PY" )
+			    )
+			VAR _costIncrease =
+			    SUMX (
+			        FILTER ( _products, [@units] > 0 && [@unitsPY] > 0 ),
+			        [@cost] - [@units] * DIVIDE ( CONVERT ( [@costPY], DOUBLE ), [@unitsPY] )
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( _costIncrease ), - ROUND ( _costIncrease, 2 ) )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Margin bridge
+		lineageTag: bb858fc6-191d-41c0-a057-9eebfcbf97b5
+
+	/// Margin bridge PY to AC, product mix step: the margin change left after volume, price and unit cost, i.e. the effect of selling a different mix of products (including products new or dropped this year), USD.
+	measure 'Margin Mix Effect' =
+			VAR _change = [Gross Margin ΔPY]
+			RETURN
+			    IF ( NOT ISBLANK ( _change ), _change - [Margin Volume Effect] - [Margin Price Effect] - [Margin Unit Cost Effect] )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Margin bridge
+		lineageTag: 0e82ec44-b25b-4766-a56f-5905da23ec15
+
+	/// Comparison chosen in the report's Compare with slicer: PY, BU or FC. BU when nothing or more than one is selected. Text, used by the comparison measures, headlines and dynamic titles.
+	measure 'Comparison Label' = SELECTEDVALUE ( 'Comparison'[Comparison], "BU" )
 		displayFolder: Report titles
 		lineageTag: da588170-5a71-4375-a61a-4e831e14fd93
 
-	/// Net sales of the comparison chosen in the Compare with slicer: PY, BU or FC (PY by default). Same values as the PY, BU and FC measures.
+	/// The Compare with choice in words for headlines: budget, forecast or last year.
+	measure 'Comparison Name' = SWITCH ( [Comparison Label], "BU", "budget", "FC", "forecast", "last year" )
+		displayFolder: Report titles
+		lineageTag: 9d6648ef-b3e0-4f02-b4bb-4723d0fb10f8
+
+	/// Net sales of the comparison chosen in the Compare with slicer: PY, BU or FC (BU by default). Same values as the PY, BU and FC measures.
 	measure CMP = SWITCH ( [Comparison Label], "BU", [BU], "FC", [FC], [PY] )
 		formatString: \$#,##0
 		displayFolder: Comparison
 		lineageTag: 0d22ef29-29df-4c9b-815e-8b390ff11229
 
-	/// AC minus the comparison chosen in the Compare with slicer: ΔPY, ΔBU or ΔFC (ΔPY by default).
+	/// AC minus the comparison chosen in the Compare with slicer: ΔPY, ΔBU or ΔFC (ΔBU by default).
 	measure ΔCMP = SWITCH ( [Comparison Label], "BU", [ΔBU], "FC", [ΔFC], [ΔPY] )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Comparison
 		lineageTag: 107fd6f5-2396-4251-a2e6-09342695ff85
 
-	/// AC vs the comparison chosen in the Compare with slicer, in %: ΔPY %, ΔBU % or ΔFC % (ΔPY % by default).
+	/// AC vs the comparison chosen in the Compare with slicer, in %: ΔPY %, ΔBU % or ΔFC % (ΔBU % by default).
 	measure 'ΔCMP %' = SWITCH ( [Comparison Label], "BU", [ΔBU %], "FC", [ΔFC %], [ΔPY %] )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Comparison
 		lineageTag: b4a78004-15bf-41fc-b630-3aeb5829ec94
 
-	/// Text for a dynamic report title that follows the Compare with slicer. KPI card title for ΔCMP, e.g. ΔBU.
+	/// Second comparison shown beside the Compare with choice: PY when BU or FC is chosen, BU when PY is chosen. Text.
+	measure 'CMP2 Label' = IF ( [Comparison Label] = "PY", "BU", "PY" )
+		displayFolder: Report titles
+		lineageTag: 41501c55-6148-465d-b235-382bdc4fecbc
+
+	/// The second comparison in words for headlines: budget or last year.
+	measure 'CMP2 Name' = IF ( [CMP2 Label] = "BU", "budget", "last year" )
+		displayFolder: Report titles
+		lineageTag: 8582e7f4-427e-423e-b9a9-54f7bc326a77
+
+	/// Net sales of the second comparison: PY, or BU when PY is chosen in the Compare with slicer.
+	measure CMP2 = IF ( [CMP2 Label] = "BU", [BU], [PY] )
+		formatString: \$#,##0
+		displayFolder: Comparison
+		lineageTag: 48649c5a-5d5a-4997-a338-2ea7082ce54c
+
+	/// AC minus the second comparison: ΔPY, or ΔBU when PY is chosen in the Compare with slicer.
+	measure ΔCMP2 = IF ( [CMP2 Label] = "BU", [ΔBU], [ΔPY] )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Comparison
+		lineageTag: 81c47cb6-2a2a-45e7-9a6a-5a1dc0732b09
+
+	/// AC vs the second comparison, in %: ΔPY %, or ΔBU % when PY is chosen in the Compare with slicer.
+	measure 'ΔCMP2 %' = IF ( [CMP2 Label] = "BU", [ΔBU %], [ΔPY %] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Comparison
+		lineageTag: acee5da7-e97f-48f7-8846-3eda205a4b37
+
+	/// Channel the Channels page focuses on: the single channel in the filter context (slicer or click), otherwise the channel that contributes most to the total variance vs the chosen comparison. Ignores product filters so it stays the same on every row of a chart by category. Text.
+	measure 'Focus Channel' =
+			VAR _selected = SELECTEDVALUE ( 'Store'[Channel] )
+			VAR _channels =
+			    ADDCOLUMNS (
+			        VALUES ( 'Store'[Channel] ),
+			        "@delta", CALCULATE ( [ΔCMP], ALLSELECTED ( 'Product' ) )
+			    )
+			VAR _sign = IF ( SUMX ( _channels, [@delta] ) < 0, -1, 1 )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _selected ),
+			        _selected,
+			        MAXX ( TOPN ( 1, _channels, [@delta] * _sign, DESC ), 'Store'[Channel] )
+			    )
+		displayFolder: Report text
+		lineageTag: 0603e39c-b515-41ee-981f-738ad831fdc9
+
+	/// ΔCMP for the focus channel of the Channels page (the clicked or selected channel, otherwise the one that contributes most to the variance).
+	measure 'ΔCMP Focus Channel' =
+			VAR _channel = [Focus Channel]
+			RETURN
+			    CALCULATE ( [ΔCMP], 'Store'[Channel] = _channel )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Comparison
+		lineageTag: d968cd3c-c95c-4957-9d0e-2725f1fdea2b
+
+	/// Subject for headlines and chart titles from the active filters: Sales, Online sales, Store sales, Sales in Germany, Computers sales in the United States. Text.
+	measure 'Headline Subject' =
+			VAR _category = IF ( ISFILTERED ( 'Product'[Category] ), SELECTEDVALUE ( 'Product'[Category] ) )
+			VAR _country = IF ( ISFILTERED ( 'Store'[Country] ), SELECTEDVALUE ( 'Store'[Country] ) )
+			VAR _channel = IF ( ISFILTERED ( 'Store'[Channel] ), SELECTEDVALUE ( 'Store'[Channel] ) )
+			VAR _countryName = IF ( _country IN { "United States", "United Kingdom", "Netherlands" }, "the " & _country, _country )
+			VAR _where =
+			    SWITCH (
+			        TRUE (),
+			        _country = "Online" || ( ISBLANK ( _country ) && _channel = "Online" ), " online",
+			        NOT ISBLANK ( _country ), " in " & _countryName,
+			        _channel = "Stores", " in stores",
+			        ""
+			    )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        NOT ISBLANK ( _category ), _category & " sales" & _where,
+			        _where = " online", "Online sales",
+			        _where = " in stores", "Store sales",
+			        "Sales" & _where
+			    )
+		displayFolder: Report text
+		lineageTag: 75cf4f10-9fed-4668-bcbe-f3c955f8c4d5
+
+	/// Overview page headline: AC vs the chosen comparison and the second comparison, and the channel (or, with one channel, the category) that carries most of the gap. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	measure 'Headline Overview' =
+			VAR _subject = [Headline Subject]
+			VAR _delta = [ΔCMP]
+			VAR _pct = [ΔCMP %]
+			VAR _pct2 = [ΔCMP2 %]
+			VAR _byChannel = NOT HASONEVALUE ( 'Store'[Channel] )
+			VAR _items =
+			    UNION (
+			        FILTER ( SELECTCOLUMNS ( VALUES ( 'Store'[Channel] ), "@name", 'Store'[Channel], "@delta", [ΔCMP] ), _byChannel ),
+			        FILTER ( SELECTCOLUMNS ( VALUES ( 'Product'[Category] ), "@name", 'Product'[Category], "@delta", [ΔCMP] ), NOT _byChannel )
+			    )
+			VAR _sign = IF ( _delta < 0, -1, 1 )
+			VAR _top = TOPN ( 1, FILTER ( _items, [@delta] * _sign > 0 ), [@delta] * _sign, DESC )
+			VAR _topName = MAXX ( _top, [@name] )
+			VAR _topDelta = MAXX ( _top, [@delta] )
+			VAR _share = DIVIDE ( _topDelta, _delta )
+			VAR _gapWord = IF ( _delta < 0, "gap", "lead" )
+			VAR _total = "$" & FORMAT ( ABS ( _delta ) / 1e6, "0.0" ) & "M"
+			VAR _vs1 = FORMAT ( ABS ( _pct ), "0.0%" ) & IF ( _pct < 0, " below ", " above " ) & [Comparison Name]
+			VAR _vs2 =
+			    IF (
+			        NOT ISBLANK ( _pct2 ),
+			        IF ( ( _pct < 0 ) = ( _pct2 < 0 ), " and ", " but " )
+			            & FORMAT ( ABS ( _pct2 ), "0.0%" ) & IF ( _pct2 < 0, " below ", " above " ) & [CMP2 Name]
+			    )
+			-- Channels read as "Online sales" / "Store sales" (plural), categories as "the Computers category" (singular)
+			VAR _topLabel = IF ( _byChannel, IF ( _topName = "Stores", "Store", _topName ) & " sales", "the " & _topName & " category" )
+			VAR _driver =
+			    IF (
+			        COUNTROWS ( _items ) > 1 && NOT ISBLANK ( _topName ),
+			        "; " & _topLabel
+			            & IF (
+			                _share > 1,
+			                IF ( _byChannel, " are $", " is $" ) & FORMAT ( ABS ( _topDelta ) / 1e6, "0.0" ) & "M" & IF ( _topDelta < 0, " below ", " above " ) & [Comparison Name]
+			                    & ", more than the whole " & _total & " " & _gapWord,
+			                IF ( _byChannel, " carry ", " carries " ) & FORMAT ( _share, "0%" ) & " of the " & _total & " " & _gapWord
+			            )
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( _delta ), _subject & " are " & _vs1 & _vs2 & _driver )
+		displayFolder: Report text
+		lineageTag: 39918caa-b7d2-4f7f-83f1-6faaf777cbd8
+
+	/// Channels page headline: the focus channel's share of the gap to the chosen comparison and its change vs the second comparison. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	measure 'Headline Channels' =
+			VAR _channel = [Focus Channel]
+			VAR _plural = _channel = "Stores"
+			VAR _delta = CALCULATE ( [ΔCMP], REMOVEFILTERS ( 'Store'[Channel] ) )
+			VAR _channels = CALCULATE ( DISTINCTCOUNT ( 'Store'[Channel] ), REMOVEFILTERS ( 'Store'[Channel] ) )
+			VAR _channelDelta = CALCULATE ( [ΔCMP], 'Store'[Channel] = _channel )
+			VAR _channelPct = CALCULATE ( [ΔCMP %], 'Store'[Channel] = _channel )
+			VAR _channelPct2 = CALCULATE ( [ΔCMP2 %], 'Store'[Channel] = _channel )
+			VAR _share = DIVIDE ( _channelDelta, _delta )
+			VAR _verb = IF ( _plural, " are ", " is " )
+			VAR _money = "$" & FORMAT ( ABS ( _channelDelta ) / 1e6, "0.0" ) & "M"
+			VAR _total = "$" & FORMAT ( ABS ( _delta ) / 1e6, "0.0" ) & "M"
+			VAR _dir = IF ( _channelDelta < 0, " below ", " above " )
+			VAR _vs2 =
+			    IF (
+			        NOT ISBLANK ( _channelPct2 ),
+			        FORMAT ( ABS ( _channelPct2 ), "0.0%" ) & IF ( _channelPct2 < 0, " below ", " above " ) & [CMP2 Name]
+			    )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _channelDelta ),
+			        SWITCH (
+			            TRUE (),
+			            _channels = 1,
+			                _channel & _verb & _money & " (" & FORMAT ( ABS ( _channelPct ), "0.0%" ) & ")" & _dir & [Comparison Name]
+			                    & IF ( NOT ISBLANK ( _vs2 ), " and " & _vs2 ),
+			            _share > 1,
+			                _channel & _verb & _money & _dir & [Comparison Name] & ", more than the whole " & _total & IF ( _delta < 0, " gap", " lead" )
+			                    & IF ( NOT ISBLANK ( _vs2 ), ", and " & _vs2 ),
+			            _share <= 0,
+			                _channel & _verb & _money & _dir & [Comparison Name] & " while the total is " & _total & IF ( _delta < 0, " below", " above" )
+			                    & IF ( NOT ISBLANK ( _vs2 ), "; " & IF ( _plural, "they are ", "it is " ) & _vs2 ),
+			            _channel & IF ( _plural, " account for ", " accounts for " ) & FORMAT ( _share, "0%" ) & " of the " & _total
+			                & IF ( _delta < 0, " gap to ", " lead over " ) & [Comparison Name]
+			                & IF ( NOT ISBLANK ( _vs2 ), " and" & _verb & _vs2 )
+			        )
+			    )
+		displayFolder: Report text
+		lineageTag: 8d66ec9d-462e-42d5-80d4-336fa8ce8e87
+
+	/// Products page headline: the category that carries most of the gap to the chosen comparison, and its units vs last year (the plan has no units). Follows the Channel and Country slicers, clicks and Compare with. Text.
+	measure 'Headline Products' =
+			VAR _delta = [ΔCMP]
+			VAR _items = SELECTCOLUMNS ( VALUES ( 'Product'[Category] ), "@name", 'Product'[Category], "@delta", [ΔCMP] )
+			VAR _sign = IF ( _delta < 0, -1, 1 )
+			VAR _top = TOPN ( 1, FILTER ( _items, [@delta] * _sign > 0 ), [@delta] * _sign, DESC )
+			VAR _name = MAXX ( _top, [@name] )
+			VAR _topDelta = MAXX ( _top, [@delta] )
+			VAR _share = DIVIDE ( _topDelta, _delta )
+			VAR _units = CALCULATE ( [Units ΔPY %], 'Product'[Category] = _name )
+			VAR _price = CALCULATE ( [Avg Net Price ΔPY %], 'Product'[Category] = _name )
+			VAR _unitsText = "units are " & FORMAT ( ABS ( _units ), "0.0%" ) & IF ( _units < 0, " below", " above" ) & " last year"
+			VAR _money = "$" & FORMAT ( ABS ( _topDelta ) / 1e6, "0.0" ) & "M"
+			VAR _total = "$" & FORMAT ( ABS ( _delta ) / 1e6, "0.0" ) & "M"
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _name ),
+			        SWITCH (
+			            TRUE (),
+			            COUNTROWS ( _items ) = 1,
+			                _name & ": " & _money & " (" & FORMAT ( ABS ( [ΔCMP %] ), "0.0%" ) & ")" & IF ( _delta < 0, " below ", " above " ) & [Comparison Name]
+			                    & "; " & _unitsText & " and the average price is " & FORMAT ( ABS ( _price ), "0.0%" ) & IF ( _price < 0, " lower", " higher" ),
+			            _share > 1,
+			                _name & ": " & _money & IF ( _topDelta < 0, " below ", " above " ) & [Comparison Name] & ", more than the whole " & _total
+			                    & IF ( _delta < 0, " gap", " lead" ) & "; " & _unitsText,
+			            _money & " of the " & _total & IF ( _delta < 0, " gap to ", " lead over " ) & [Comparison Name] & " comes from " & _name & ", where " & _unitsText
+			        )
+			    )
+		displayFolder: Report text
+		lineageTag: 3c775ef4-52dd-4bf8-9391-1a0b53d9cfce
+
+	/// Regions page headline: the one or two countries that carry most of the gap to the chosen comparison, and the net variance of the others. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	measure 'Headline Regions' =
+			VAR _delta = [ΔCMP]
+			VAR _items = SELECTCOLUMNS ( VALUES ( 'Store'[Country] ), "@name", 'Store'[Country], "@delta", [ΔCMP] )
+			VAR _sign = IF ( _delta < 0, -1, 1 )
+			VAR _top = TOPN ( 2, FILTER ( _items, [@delta] * _sign > 0 ), [@delta] * _sign, DESC )
+			VAR _topCount = COUNTROWS ( _top )
+			VAR _first = MAXX ( TOPN ( 1, _top, [@delta] * _sign, DESC ), [@name] )
+			VAR _second = MAXX ( TOPN ( 1, _top, [@delta] * _sign, ASC ), [@name] )
+			VAR _topDelta = SUMX ( _top, [@delta] )
+			VAR _others = COUNTROWS ( _items ) - _topCount
+			VAR _otherDelta = _delta - _topDelta
+			VAR _articles = { "United States", "United Kingdom", "Netherlands" }
+			VAR _firstName = IF ( _first IN _articles, "The " & _first, _first )
+			VAR _secondName = IF ( _second IN _articles, "the " & _second, _second )
+			VAR _dir = IF ( _delta < 0, " below ", " above " )
+			VAR _pct2 = [ΔCMP2 %]
+			VAR _rest =
+			    SWITCH (
+			        TRUE (),
+			        _others = 1, "; the other country is $" & FORMAT ( ABS ( _otherDelta ) / 1e6, "0.0" ) & "M" & IF ( _otherDelta < 0, " behind", " ahead" ),
+			        _others > 1, "; the other " & _others & " are $" & FORMAT ( ABS ( _otherDelta ) / 1e6, "0.0" ) & "M" & IF ( _otherDelta < 0, " behind", " ahead" ),
+			        ""
+			    )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _first ),
+			        SWITCH (
+			            TRUE (),
+			            COUNTROWS ( _items ) = 1,
+			                _firstName & " is $" & FORMAT ( ABS ( _delta ) / 1e6, "0.0" ) & "M (" & FORMAT ( ABS ( [ΔCMP %] ), "0.0%" ) & ")" & _dir & [Comparison Name]
+			                    & IF ( NOT ISBLANK ( _pct2 ), " and " & FORMAT ( ABS ( _pct2 ), "0.0%" ) & IF ( _pct2 < 0, " below ", " above " ) & [CMP2 Name] ),
+			            _topCount = 2,
+			                _firstName & " and " & _secondName & " are $" & FORMAT ( ABS ( _topDelta ) / 1e6, "0.0" ) & "M" & _dir & [Comparison Name] & _rest,
+			            _firstName & " is $" & FORMAT ( ABS ( _topDelta ) / 1e6, "0.0" ) & "M" & _dir & [Comparison Name] & _rest
+			        )
+			    )
+		displayFolder: Report text
+		lineageTag: be1b72f1-f547-4acd-b0ef-099fc4882005
+
+	/// Margin page headline: gross margin vs last year and the bridge effects that explain it (there is no margin budget, so the page always compares with PY and says so when BU or FC is chosen). Follows the Channel and Country slicers and clicks. Text.
+	measure 'Headline Margin' =
+			VAR _subject = SUBSTITUTE ( SUBSTITUTE ( [Headline Subject], "Sales", "Margin" ), "sales", "margin" )
+			VAR _change = [Gross Margin ΔPY]
+			VAR _rate = [Gross Margin %]
+			VAR _ratePP = [Gross Margin % ΔPY pp]
+			VAR _volume = [Margin Volume Effect]
+			VAR _price = [Margin Price Effect]
+			VAR _cost = [Margin Unit Cost Effect]
+			VAR _mix = _change - _volume - _price - _cost
+			VAR _effects =
+			    {
+			        ( 1, "product mix", _mix, "product mix" ),
+			        ( 2, IF ( _volume < 0, "lower volume", "higher volume" ), _volume, "volume" ),
+			        ( 3, IF ( _price < 0, "lower prices", "higher prices" ), _price, "prices" ),
+			        ( 4, IF ( _cost < 0, "higher unit costs", "lower unit costs" ), _cost, "unit costs" )
+			    }
+			-- Effects under 5% of the change (at least $50k) count as unchanged
+			VAR _threshold = MAX ( ABS ( _change ) * 0.05, 50000 )
+			VAR _big = FILTER ( _effects, ABS ( [Value3] ) >= _threshold )
+			VAR _small = FILTER ( _effects, ABS ( [Value3] ) < _threshold )
+			VAR _drivers =
+			    CONCATENATEX (
+			        _big,
+			        [Value2] & IF ( [Value3] < 0, " cost $", " added $" ) & FORMAT ( ABS ( [Value3] ) / 1e6, "0.0" ) & "M",
+			        IF ( COUNTROWS ( _big ) <= 2, " and ", ", " ),
+			        ABS ( [Value3] ), DESC
+			    )
+			VAR _held = IF ( COUNTROWS ( _small ) > 0, ", while " & CONCATENATEX ( _small, [Value4], " and ", [Value1], ASC ) & " held" )
+			VAR _rateText =
+			    IF (
+			        ROUND ( _ratePP, 1 ) = 0,
+			        "; the rate held at ",
+			        "; the rate " & IF ( _ratePP < 0, "fell ", "rose " ) & FORMAT ( ABS ( _ratePP ), "0.0" ) & " pp to "
+			    ) & FORMAT ( _rate, "0.0%" )
+			VAR _amount = "$" & FORMAT ( ABS ( _change ) / 1e6, "0.0" ) & "M"
+			VAR _lowerSubject = IF ( LEFT ( _subject, 6 ) = "Margin", "margin" & MID ( _subject, 7, 200 ), _subject )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _change ),
+			        IF (
+			            [Comparison Label] = "PY",
+			            _subject & " is " & _amount & IF ( _change < 0, " below", " above" ) & " last year: " & _drivers & _held & _rateText,
+			            "No margin budget; compared with last year, " & _lowerSubject & " is " & _amount & IF ( _change < 0, " lower: ", " higher: " ) & _drivers & _held
+			        )
+			    )
+		displayFolder: Report text
+		lineageTag: c2d27b94-144d-402b-92ec-fdff9ef976f6
+
+	/// Outlook page headline: what the June forecast (6+6) expected for H2 vs last year, what H2 delivered, and how the year closed vs the chosen comparison. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	measure 'Headline Outlook' =
+			VAR _actualH2 = CALCULATE ( [AC], 'Date'[Month Number] >= 7 )
+			VAR _forecastH2 = CALCULATE ( [FC], 'Date'[Month Number] >= 7 )
+			VAR _previousH2 = CALCULATE ( [PY], 'Date'[Month Number] >= 7 )
+			VAR _forecastVsPY = DIVIDE ( _forecastH2 - _previousH2, _previousH2 )
+			VAR _actualVsPY = DIVIDE ( _actualH2 - _previousH2, _previousH2 )
+			VAR _beat = _actualH2 - _forecastH2
+			VAR _pct = [ΔCMP %]
+			VAR _subject = [Headline Subject]
+			VAR _prefix = IF ( _subject = "Sales", "The June forecast", _subject & ": the June forecast" )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _forecastH2 ) && NOT ISBLANK ( _actualH2 ),
+			        _prefix & " expected H2 " & FORMAT ( ABS ( _forecastVsPY ), "0.0%" ) & IF ( _forecastVsPY < 0, " below", " above" ) & " last year; H2 closed "
+			            & FORMAT ( ABS ( _actualVsPY ), "0.0%" ) & IF ( _actualVsPY < 0, " below", " above" )
+			            & ", $" & FORMAT ( ABS ( _beat ) / 1e6, "0.0" ) & "M" & IF ( _beat >= 0, " better", " worse" )
+			            & ", and the year " & FORMAT ( ABS ( _pct ), "0.0%" ) & IF ( _pct < 0, " below ", " above " ) & [Comparison Name]
+			    )
+		displayFolder: Report text
+		lineageTag: dbc84f79-73c6-4364-819b-e1258ec41364
+
+	/// Grey line under each page headline: period, currency, scenario key and the active Channel, Country and Category filters. Text.
+	measure Subtitle =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _channel = IF ( ISFILTERED ( 'Store'[Channel] ), "Channel: " & CONCATENATEX ( VALUES ( 'Store'[Channel] ), 'Store'[Channel], ", ", 'Store'[Channel], ASC ) )
+			VAR _country = IF ( ISFILTERED ( 'Store'[Country] ), "Country: " & CONCATENATEX ( VALUES ( 'Store'[Country] ), 'Store'[Country], ", ", 'Store'[Country], ASC ) )
+			VAR _category = IF ( ISFILTERED ( 'Product'[Category] ), "Category: " & CONCATENATEX ( VALUES ( 'Product'[Category] ), 'Product'[Category], ", ", 'Product'[Category], ASC ) )
+			VAR _scope = CONCATENATEX ( FILTER ( { _channel, _country, _category }, [Value] <> "" ), [Value], " · " )
+			RETURN
+			    "Full year " & _year & " · USD · AC actual, PY " & ( _year - 1 ) & ", BU Budget " & _year & ", FC Forecast 6+6 · "
+			        & IF ( _scope = "", "All channels and countries", _scope )
+		displayFolder: Report text
+		lineageTag: e151b197-5c4e-414e-aee4-2a74236d7fdc
+
+	/// Subtitle for the Products page: the standard subtitle plus a note that units, price and cost compare with PY. Text.
+	measure 'Subtitle Products' = [Subtitle] & " · Units, price and cost vs PY (the plan has no units)"
+		displayFolder: Report text
+		lineageTag: c2b9c187-4641-46a1-ac77-c275cf118223
+
+	/// Subtitle for the Margin page: the standard subtitle plus a note that margin compares with PY. Text.
+	measure 'Subtitle Margin' = [Subtitle] & " · Margin vs PY (no margin budget)"
+		displayFolder: Report text
+		lineageTag: 5c7b40ab-f83b-48fe-a190-bc6f543eea74
+
+	/// Subtitle for the Outlook page: the standard subtitle plus what FC 6+6 means. Text.
+	measure 'Subtitle Outlook' = [Subtitle] & " · FC 6+6: Jan–Jun actuals, Jul–Dec forecast made in June"
+		displayFolder: Report text
+		lineageTag: 7b5cc389-28c8-4d9b-bcc0-e5bc03bff8b0
+
+	/// Name of the hovered item on the tooltip page: category, country or channel. Text.
+	measure 'Tooltip Title' =
+			VAR _category = IF ( ISFILTERED ( 'Product'[Category] ), SELECTEDVALUE ( 'Product'[Category] ) )
+			VAR _country = IF ( ISFILTERED ( 'Store'[Country] ), SELECTEDVALUE ( 'Store'[Country] ) )
+			VAR _channel = IF ( ISFILTERED ( 'Store'[Channel] ), SELECTEDVALUE ( 'Store'[Channel] ) )
+			RETURN
+			    COALESCE ( _category, _country, _channel, "All sales" )
+		displayFolder: Report text
+		lineageTag: e8001704-8d09-4d5b-9b24-8273ad30eb19
+
+	/// One-line summary on the tooltip page: AC and the variance vs the chosen comparison, e.g. AC $106.0M · ΔBU −$18.4M (−14.8%) · 2025. Text.
+	measure 'Tooltip Summary' =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _actual = [AC]
+			VAR _delta = [ΔCMP]
+			VAR _pct = [ΔCMP %]
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _actual ),
+			        "AC $" & FORMAT ( _actual / 1e6, "0.0" ) & "M · Δ" & [Comparison Label] & " "
+			            & IF ( ISBLANK ( _delta ), "n/a", FORMAT ( _delta / 1e6, "+\$0.0;-\$0.0;\$0.0" ) & "M (" & FORMAT ( _pct, "+0.0%;-0.0%;0.0%" ) & ")" )
+			            & " · " & _year
+			    )
+		displayFolder: Report text
+		lineageTag: 2bf95ef7-2524-4b72-ab47-61a186b71866
+
+	/// Text for a dynamic report title that follows the Compare with slicer: the variance code, e.g. ΔBU.
 	measure 'Title KPI Δ' = "Δ" & [Comparison Label]
 		displayFolder: Report titles
 		lineageTag: 6f22d1c7-4d8a-4388-a619-42d077d0a181
 
-	/// Text for a dynamic report title that follows the Compare with slicer. KPI card title for ΔCMP %, e.g. ΔBU %.
+	/// Text for a dynamic report title that follows the Compare with slicer: the relative variance code, e.g. ΔBU %.
 	measure 'Title KPI Δ %' = "Δ" & [Comparison Label] & " %"
 		displayFolder: Report titles
 		lineageTag: 0e252047-89ed-4e7d-8801-81709b39e7c4
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU by channel, $M.
-	measure 'Title Δ by channel' = "Δ" & [Comparison Label] & " by channel, $M"
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by channel.
+	measure 'Title Δ by channel' = "Sales | USD m | Δ" & [Comparison Label] & " | by channel"
 		displayFolder: Report titles
 		lineageTag: 6d2d1c73-32cc-4a26-bcf5-9c880adc6adb
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU by country, $M.
-	measure 'Title Δ by country' = "Δ" & [Comparison Label] & " by country, $M"
+	/// IBCS chart title for the second comparison, e.g. Sales | USD m | ΔPY | by channel.
+	measure 'Title Δ2 by channel' = "Sales | USD m | Δ" & [CMP2 Label] & " | by channel"
+		displayFolder: Report titles
+		lineageTag: 9c9996dd-b7a5-4d9d-92ef-68a999397494
+
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by country.
+	measure 'Title Δ by country' = "Sales | USD m | Δ" & [Comparison Label] & " | by country"
 		displayFolder: Report titles
 		lineageTag: 180f1c57-040b-4d88-925d-4619d2cfaee7
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU % by country.
-	measure 'Title Δ % by country' = "Δ" & [Comparison Label] & " % by country"
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by country.
+	measure 'Title Δ % by country' = "Sales | % | Δ" & [Comparison Label] & " % | by country"
 		displayFolder: Report titles
 		lineageTag: 925b1727-c12a-4121-a2cc-d8b83477d7b5
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU by category, $M.
-	measure 'Title Δ by category' = "Δ" & [Comparison Label] & " by category, $M"
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by product category.
+	measure 'Title Δ by category' = "Sales | USD m | Δ" & [Comparison Label] & " | by product category"
 		displayFolder: Report titles
 		lineageTag: 7c9e9c6a-da4a-4f9f-ac43-389294822885
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU % by category.
-	measure 'Title Δ % by category' = "Δ" & [Comparison Label] & " % by category"
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by product category.
+	measure 'Title Δ % by category' = "Sales | % | Δ" & [Comparison Label] & " % | by product category"
 		displayFolder: Report titles
 		lineageTag: d618f604-bf84-440d-98a1-86092517d5af
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU % by month and channel.
-	measure 'Title Δ % by month and channel' = "Δ" & [Comparison Label] & " % by month and channel"
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by month and channel.
+	measure 'Title Δ % by month and channel' = "Sales | % | Δ" & [Comparison Label] & " % | by month and channel"
 		displayFolder: Report titles
 		lineageTag: 2b730a55-0a51-4581-9c72-ebb38a69c022
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. Change vs budget by channel, $M (ΔBU).
-	measure 'Title channel bridge' = "Change vs " & SWITCH ( [Comparison Label], "BU", "budget", "FC", "forecast", "last year" ) & " by channel, $M (Δ" & [Comparison Label] & ")"
+	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | BU to AC bridge | by channel.
+	measure 'Title channel bridge' = "Sales | USD m | " & [Comparison Label] & " to AC bridge | by channel"
 		displayFolder: Report titles
 		lineageTag: 8ef07124-6b93-44cd-9a81-bf197dc7afa3
 
-	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. AC and ΔBU % by category and channel.
-	measure 'Title category matrix' = "AC and Δ" & [Comparison Label] & " % by category and channel"
+	/// IBCS title for the country by product category matrix that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | country × product category.
+	measure 'Title category matrix' = "Sales | USD m | Δ" & [Comparison Label] & " | country × product category"
 		displayFolder: Report titles
 		lineageTag: 5926ab9d-f8aa-40c2-a7c1-234877ded130
 
-	/// SVG image for the Overview: net sales by month for 2025, AC (solid dark grey) in front of the comparison chosen in the Compare with slicer (PY solid light grey, BU outlined, FC hatched), with red/green variance columns beneath. Follows the Channel and Country slicers. 1240 x 752 px.
+	/// IBCS chart title for the focus channel of the Channels page, e.g. Online sales | USD m | ΔBU | by product category.
+	measure 'Title focus channel by category' = IF ( [Focus Channel] = "Stores", "Store", [Focus Channel] ) & " sales | USD m | Δ" & [Comparison Label] & " | by product category"
+		displayFolder: Report titles
+		lineageTag: 2d71e788-16ea-45e2-ba02-bcaa4e9ec5c6
+
+	/// Title of the Products driver table, e.g. Product categories | where the gap to budget comes from | 2025.
+	measure 'Title driver table' = "Product categories | where the " & IF ( [ΔCMP] < 0, "gap to ", "lead over " ) & [Comparison Name] & " comes from | " & MAX ( 'Date'[Year] )
+		displayFolder: Report titles
+		lineageTag: c19ed720-ffd8-4db2-a845-ddeb5205ad4b
+
+	/// SVG KPI tile for the Overview, 376 x 132 px: AC sales in USD m, the variance vs the chosen comparison and the second comparison, and mini IBCS bars for AC and both comparisons.
+	measure 'KPI Sales SVG' =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _actual = [AC]
+			VAR _code1 = [Comparison Label]
+			VAR _code2 = [CMP2 Label]
+			VAR _value1 = [CMP]
+			VAR _value2 = [CMP2]
+			VAR _scale = DIVIDE ( 100, MAX ( MAX ( _actual, _value1 ), _value2 ) )
+			VAR _style1 =
+			    SWITCH (
+			        _code1,
+			        "PY", "fill='%23A6A6A6'",
+			        "FC", "fill='url(%23h)' stroke='%231F1F1F' stroke-width='1.2'",
+			        "fill='white' stroke='%231F1F1F' stroke-width='1.2'"
+			    )
+			VAR _style2 = IF ( _code2 = "PY", "fill='%23A6A6A6'", "fill='white' stroke='%231F1F1F' stroke-width='1.2'" )
+			-- One variance row; YY is replaced by the row's baseline
+			VAR _row1 =
+			    "<text x='16' y='YY' class='k b'>&%23916;" & _code1 & "</text>"
+			        & IF (
+			            ISBLANK ( [ΔCMP] ),
+			            "<text x='64' y='YY' class='k'>&%238211;</text>",
+			            "<text x='64' y='YY' class='v " & IF ( [ΔCMP] < 0, "r", "g" ) & "'>" & FORMAT ( ROUND ( [ΔCMP] / 1e6, 1 ), "+0.0;-0.0;0.0" ) & "</text>"
+			                & "<text x='124' y='YY' class='v " & IF ( [ΔCMP %] < 0, "r", "g" ) & "'>" & SUBSTITUTE ( FORMAT ( [ΔCMP %], "+0.0%;-0.0%;0.0%" ), "%", "%25" ) & "</text>"
+			        )
+			VAR _row2 =
+			    "<text x='16' y='YY' class='k b'>&%23916;" & _code2 & "</text>"
+			        & IF (
+			            ISBLANK ( [ΔCMP2] ),
+			            "<text x='64' y='YY' class='k'>&%238211;</text>",
+			            "<text x='64' y='YY' class='v " & IF ( [ΔCMP2] < 0, "r", "g" ) & "'>" & FORMAT ( ROUND ( [ΔCMP2] / 1e6, 1 ), "+0.0;-0.0;0.0" ) & "</text>"
+			                & "<text x='124' y='YY' class='v " & IF ( [ΔCMP2 %] < 0, "r", "g" ) & "'>" & SUBSTITUTE ( FORMAT ( [ΔCMP2 %], "+0.0%;-0.0%;0.0%" ), "%", "%25" ) & "</text>"
+			        )
+			VAR _bars =
+			    "<text x='232' y='35' class='s'>AC</text><rect x='256' y='25' width='" & FORMAT ( _actual * _scale, "0.0" ) & "' height='12' fill='%231F1F1F'/>"
+			        & "<text x='232' y='59' class='s'>" & _code1 & "</text>"
+			        & IF ( NOT ISBLANK ( _value1 ), "<rect x='256.6' y='49.6' width='" & FORMAT ( MAX ( _value1 * _scale - 1.2, 0 ), "0.0" ) & "' height='10.8' " & _style1 & "/>" )
+			        & "<text x='232' y='83' class='s'>" & _code2 & "</text>"
+			        & IF ( NOT ISBLANK ( _value2 ), "<rect x='256.6' y='73.6' width='" & FORMAT ( MAX ( _value2 * _scale - 1.2, 0 ), "0.0" ) & "' height='10.8' " & _style2 & "/>" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='376' height='132' viewBox='0 0 376 132'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}.n{font-size:34px;font-weight:600}"
+			        & ".v{font-size:14px;font-weight:600}.s{font-size:12px;fill:%236B7280}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<defs><pattern id='h' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='5' height='5' fill='white'/><line x1='0' y1='0' x2='0' y2='5' stroke='%231F1F1F' stroke-width='1.6'/></pattern></defs>"
+			        & "<text x='16' y='26' class='k'>Sales &%23183; AC " & _year & " &%23183; USD m</text>"
+			        & "<text x='16' y='70' class='n'>" & FORMAT ( _actual / 1e6, "0.0" ) & "</text>"
+			        & SUBSTITUTE ( _row1, "YY", "100" ) & SUBSTITUTE ( _row2, "YY", "122" ) & _bars
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _actual ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: a3a25208-c83e-4d5c-8124-c3a4075ecd24
+		dataCategory: ImageUrl
+
+	/// SVG KPI tile for the Overview, 376 x 132 px: AC gross margin in USD m vs last year, a note that there is no margin budget, and mini IBCS bars for AC and PY.
+	measure 'KPI Margin SVG' =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _actual = [Gross Margin]
+			VAR _previous = [Gross Margin PY]
+			VAR _delta = [Gross Margin ΔPY]
+			VAR _pct = [Gross Margin ΔPY %]
+			VAR _code1 = [Comparison Label]
+			VAR _plan = IF ( _code1 = "PY", "BU", _code1 )
+			VAR _scale = DIVIDE ( 100, MAX ( _actual, _previous ) )
+			VAR _pyRow =
+			    "<text x='16' y='YY' class='k b'>&%23916;PY</text>"
+			        & IF (
+			            ISBLANK ( _delta ),
+			            "<text x='64' y='YY' class='k'>&%238211;</text>",
+			            "<text x='64' y='YY' class='v " & IF ( _delta < 0, "r", "g" ) & "'>" & FORMAT ( ROUND ( _delta / 1e6, 1 ), "+0.0;-0.0;0.0" ) & "</text>"
+			                & "<text x='124' y='YY' class='v " & IF ( _pct < 0, "r", "g" ) & "'>" & SUBSTITUTE ( FORMAT ( _pct, "+0.0%;-0.0%;0.0%" ), "%", "%25" ) & "</text>"
+			        )
+			VAR _planRow =
+			    "<text x='16' y='YY' class='k b'>&%23916;" & _plan & "</text>"
+			        & "<text x='64' y='YY' class='s'>&%238211;  no margin " & IF ( _plan = "FC", "forecast", "budget" ) & "</text>"
+			VAR _rows =
+			    IF (
+			        _code1 = "PY",
+			        SUBSTITUTE ( _pyRow, "YY", "100" ) & SUBSTITUTE ( _planRow, "YY", "122" ),
+			        SUBSTITUTE ( _planRow, "YY", "100" ) & SUBSTITUTE ( _pyRow, "YY", "122" )
+			    )
+			VAR _bars =
+			    "<text x='232' y='35' class='s'>AC</text><rect x='256' y='25' width='" & FORMAT ( _actual * _scale, "0.0" ) & "' height='12' fill='%231F1F1F'/>"
+			        & "<text x='232' y='59' class='s'>PY</text>"
+			        & IF ( NOT ISBLANK ( _previous ), "<rect x='256' y='49' width='" & FORMAT ( _previous * _scale, "0.0" ) & "' height='12' fill='%23A6A6A6'/>" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='376' height='132' viewBox='0 0 376 132'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}.n{font-size:34px;font-weight:600}"
+			        & ".v{font-size:14px;font-weight:600}.s{font-size:12px;fill:%236B7280}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<text x='16' y='26' class='k'>Margin &%23183; AC " & _year & " &%23183; USD m</text>"
+			        & "<text x='16' y='70' class='n'>" & FORMAT ( _actual / 1e6, "0.0" ) & "</text>"
+			        & _rows & _bars
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _actual ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: f20ee19f-0dd8-4f93-9f5a-c543b4806acd
+		dataCategory: ImageUrl
+
+	/// SVG KPI tile for the Overview, 376 x 132 px: AC gross margin rate vs last year in pp, a note that there is no margin budget, and mini IBCS bars for AC and PY.
+	measure 'KPI Margin % SVG' =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _actual = [Gross Margin %]
+			VAR _previous = [Gross Margin % PY]
+			VAR _pp = [Gross Margin % ΔPY pp]
+			VAR _code1 = [Comparison Label]
+			VAR _plan = IF ( _code1 = "PY", "BU", _code1 )
+			VAR _scale = DIVIDE ( 100, MAX ( _actual, _previous ) )
+			VAR _pyRow =
+			    "<text x='16' y='YY' class='k b'>&%23916;PY</text>"
+			        & IF (
+			            ISBLANK ( _pp ),
+			            "<text x='64' y='YY' class='k'>&%238211;</text>",
+			            "<text x='64' y='YY' class='v " & IF ( _pp < 0, "r", "g" ) & "'>" & FORMAT ( ROUND ( _pp, 1 ), "+0.0;-0.0;0.0" ) & " pp</text>"
+			        )
+			VAR _planRow =
+			    "<text x='16' y='YY' class='k b'>&%23916;" & _plan & "</text>"
+			        & "<text x='64' y='YY' class='s'>&%238211;  no margin " & IF ( _plan = "FC", "forecast", "budget" ) & "</text>"
+			VAR _rows =
+			    IF (
+			        _code1 = "PY",
+			        SUBSTITUTE ( _pyRow, "YY", "100" ) & SUBSTITUTE ( _planRow, "YY", "122" ),
+			        SUBSTITUTE ( _planRow, "YY", "100" ) & SUBSTITUTE ( _pyRow, "YY", "122" )
+			    )
+			VAR _bars =
+			    "<text x='232' y='35' class='s'>AC</text><rect x='256' y='25' width='" & FORMAT ( _actual * _scale, "0.0" ) & "' height='12' fill='%231F1F1F'/>"
+			        & "<text x='232' y='59' class='s'>PY</text>"
+			        & IF ( NOT ISBLANK ( _previous ), "<rect x='256' y='49' width='" & FORMAT ( _previous * _scale, "0.0" ) & "' height='12' fill='%23A6A6A6'/>" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='376' height='132' viewBox='0 0 376 132'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}.n{font-size:34px;font-weight:600}"
+			        & ".v{font-size:14px;font-weight:600}.s{font-size:12px;fill:%236B7280}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<text x='16' y='26' class='k'>Margin %25 &%23183; AC " & _year & "</text>"
+			        & "<text x='16' y='70' class='n'>" & SUBSTITUTE ( FORMAT ( _actual, "0.0%" ), "%", "%25" ) & "</text>"
+			        & _rows & _bars
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _actual ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: 4bf6682f-450a-4fd9-893d-73ce8231c756
+		dataCategory: ImageUrl
+
+	/// SVG KPI tile for the Overview, 376 x 132 px: the full-year forecast FC 6+6 in USD m vs budget and last year, with mini IBCS bars for FC (hatched), BU (outlined) and PY (grey).
+	measure 'KPI FC SVG' =
+			VAR _forecast = [FC]
+			VAR _budget = [BU]
+			VAR _previous = [PY]
+			VAR _deltaBU = IF ( NOT ISBLANK ( _forecast ) && NOT ISBLANK ( _budget ), _forecast - _budget )
+			VAR _deltaPY = IF ( NOT ISBLANK ( _forecast ) && NOT ISBLANK ( _previous ), _forecast - _previous )
+			VAR _pctBU = DIVIDE ( _deltaBU, _budget )
+			VAR _pctPY = DIVIDE ( _deltaPY, _previous )
+			VAR _scale = DIVIDE ( 100, MAX ( MAX ( _forecast, _budget ), _previous ) )
+			VAR _row =
+			    "<text x='16' y='YY' class='k b'>&%23916;CODE</text>"
+			        & "<text x='64' y='YY' class='v SIGN1'>DELTA</text><text x='124' y='YY' class='v SIGN2'>PCT</text>"
+			VAR _rowBU =
+			    SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _row,
+			        "YY", "100" ), "CODE", "BU" ), "SIGN1", IF ( _deltaBU < 0, "r", "g" ) ), "SIGN2", IF ( _pctBU < 0, "r", "g" ) ),
+			        "DELTA", FORMAT ( ROUND ( _deltaBU / 1e6, 1 ), "+0.0;-0.0;0.0" ) ), "PCT", SUBSTITUTE ( FORMAT ( _pctBU, "+0.0%;-0.0%;0.0%" ), "%", "%25" ) )
+			VAR _rowPY =
+			    SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _row,
+			        "YY", "122" ), "CODE", "PY" ), "SIGN1", IF ( _deltaPY < 0, "r", "g" ) ), "SIGN2", IF ( _pctPY < 0, "r", "g" ) ),
+			        "DELTA", FORMAT ( ROUND ( _deltaPY / 1e6, 1 ), "+0.0;-0.0;0.0" ) ), "PCT", SUBSTITUTE ( FORMAT ( _pctPY, "+0.0%;-0.0%;0.0%" ), "%", "%25" ) )
+			VAR _bars =
+			    "<text x='232' y='35' class='s'>FC</text><rect x='256.6' y='25.6' width='" & FORMAT ( MAX ( _forecast * _scale - 1.2, 0 ), "0.0" ) & "' height='10.8' fill='url(%23h)' stroke='%231F1F1F' stroke-width='1.2'/>"
+			        & "<text x='232' y='59' class='s'>BU</text>"
+			        & IF ( NOT ISBLANK ( _budget ), "<rect x='256.6' y='49.6' width='" & FORMAT ( MAX ( _budget * _scale - 1.2, 0 ), "0.0" ) & "' height='10.8' fill='white' stroke='%231F1F1F' stroke-width='1.2'/>" )
+			        & "<text x='232' y='83' class='s'>PY</text>"
+			        & IF ( NOT ISBLANK ( _previous ), "<rect x='256' y='73' width='" & FORMAT ( _previous * _scale, "0.0" ) & "' height='12' fill='%23A6A6A6'/>" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='376' height='132' viewBox='0 0 376 132'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}.n{font-size:34px;font-weight:600}"
+			        & ".v{font-size:14px;font-weight:600}.s{font-size:12px;fill:%236B7280}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<defs><pattern id='h' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='5' height='5' fill='white'/><line x1='0' y1='0' x2='0' y2='5' stroke='%231F1F1F' stroke-width='1.6'/></pattern></defs>"
+			        & "<text x='16' y='26' class='k'>Sales &%23183; FC 6+6 full year &%23183; USD m</text>"
+			        & "<text x='16' y='70' class='n'>" & FORMAT ( _forecast / 1e6, "0.0" ) & "</text>"
+			        & IF ( NOT ISBLANK ( _deltaBU ), _rowBU ) & IF ( NOT ISBLANK ( _deltaPY ), _rowPY ) & _bars
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _forecast ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: b6f114b7-5e24-4e07-bd68-dafcf478e3ed
+		dataCategory: ImageUrl
+
+	/// SVG hero chart for the Overview, 1000 x 768 px: sales by month with IBCS overlapping columns (PY grey behind on the left, BU outlined or FC hatched behind on the right, AC in front, AC labelled) and a strip of red/green variance columns vs the chosen comparison beneath. Follows the Channel and Country slicers, clicks and Compare with.
 	measure 'Monthly Hero SVG' =
 			VAR _code = [Comparison Label]
-			VAR _name = SWITCH ( _code, "BU", "budget", "FC", "forecast", "last year" )
+			VAR _plan = IF ( _code = "FC", "FC", "BU" )
+			VAR _year = MAX ( 'Date'[Year] )
 			VAR _months =
 			    ADDCOLUMNS (
-			        CALCULATETABLE ( SUMMARIZE ( 'Date', 'Date'[Year Month Key], 'Date'[Month] ), 'Date'[Year] = 2025 ),
-			        "@ac", [AC],
-			        "@cmp", [CMP],
-			        "@d", [ΔCMP]
+			        CALCULATETABLE ( SUMMARIZE ( 'Date', 'Date'[Year Month Key], 'Date'[Month Number], 'Date'[Month] ), 'Date'[Year] = _year ),
+			        "@actual", [AC],
+			        "@previous", [PY],
+			        "@plan", IF ( _plan = "FC", [FC], [BU] ),
+			        "@delta", [ΔCMP]
 			    )
-			VAR _max = MAXX ( _months, MAX ( [@ac], [@cmp] ) )
-			VAR _pos = MAX ( MAXX ( _months, [@d] ), 0 )
-			VAR _neg = MAX ( - MINX ( _months, [@d] ), 0 )
-			-- Top panel: columns stand on y = 440 and are at most 300 px tall
-			VAR _base = 440
-			VAR _k = DIVIDE ( 300, _max )
-			-- Bottom panel: variance columns within y = 556 to 706, zero line placed by the positive/negative extent
-			VAR _vTop = 556
-			VAR _vH = 150
-			VAR _zero = _vTop + IF ( _pos + _neg = 0, _vH / 2, _vH * _pos / ( _pos + _neg ) )
-			VAR _kv = DIVIDE ( _vH, _pos + _neg )
-			-- IBCS comparison style: PY solid light grey, BU outlined, FC hatched
-			VAR _cmpStyle =
-			    SWITCH (
-			        _code,
-			        "BU", "fill='white' stroke='%23404040' stroke-width='1.5'",
-			        "FC", "fill='url(%23h)' stroke='%23404040' stroke-width='1.5'",
-			        "fill='%23C8C8C8'"
+			-- Columns stand on y = 520 and are at most 360 px tall
+			VAR _max = MAXX ( _months, MAX ( MAX ( [@actual], [@previous] ), [@plan] ) )
+			VAR _scale = DIVIDE ( 360, _max )
+			-- Variance strip: zero line between y = 602 and 722, placed by the positive/negative extent
+			VAR _up = MAX ( MAXX ( _months, [@delta] ), 0 )
+			VAR _down = MAX ( - MINX ( _months, [@delta] ), 0 )
+			VAR _zero = 602 + IF ( _up + _down = 0, 60, 120 * _up / ( _up + _down ) )
+			VAR _vScale = DIVIDE ( 120, _up + _down )
+			VAR _planStyle =
+			    IF (
+			        _plan = "FC",
+			        "fill='url(%23h)' stroke='%231F1F1F' stroke-width='1.2'",
+			        "fill='white' stroke='%231F1F1F' stroke-width='1.2'"
 			    )
 			VAR _marks =
 			    CONCATENATEX (
 			        _months,
-			        VAR _x = 24 + ( 'Date'[Year Month Key] - 202501 ) * 100
-			        VAR _hA = [@ac] * _k
-			        VAR _hC = [@cmp] * _k
-			        VAR _d = [@d]
-			        VAR _hD = ABS ( _d ) * _kv
-			        VAR _yD = IF ( _d >= 0, _zero - _hD, _zero )
-			        VAR _yDL = IF ( _d >= 0, _zero - _hD - 7, _zero + _hD + 20 )
+			        VAR _x = 72 + ( 'Date'[Month Number] - 1 ) * 76
+			        VAR _hActual = [@actual] * _scale
+			        VAR _hPrevious = [@previous] * _scale
+			        VAR _hPlan = [@plan] * _scale
+			        VAR _top = MAX ( MAX ( _hActual, _hPrevious ), _hPlan )
+			        VAR _delta = [@delta]
+			        VAR _hDelta = ABS ( _delta ) * _vScale
 			        RETURN
-			            -- comparison column offset 10 px behind AC (IBCS overlapping columns)
-			            IF (
-			                NOT ISBLANK ( [@cmp] ),
-			                "<rect x='" & ( _x + 28 ) & "' y='" & FORMAT ( _base - _hC, "0.0" ) & "' width='34' height='" & FORMAT ( _hC, "0.0" ) & "' " & _cmpStyle & "/>"
-			            )
+			            -- IBCS overlapping columns: PY behind on the left, the plan behind on the right, AC in front
+			            IF ( NOT ISBLANK ( [@previous] ), "<rect x='" & ( _x + 8 ) & "' y='" & FORMAT ( 520 - _hPrevious, "0.0" ) & "' width='30' height='" & FORMAT ( _hPrevious, "0.0" ) & "' fill='%23A6A6A6'/>" )
+			            & IF ( NOT ISBLANK ( [@plan] ), "<rect x='" & FORMAT ( _x + 34.6, "0.0" ) & "' y='" & FORMAT ( 520.6 - _hPlan, "0.0" ) & "' width='28.8' height='" & FORMAT ( MAX ( _hPlan - 1.2, 0 ), "0.0" ) & "' " & _planStyle & "/>" )
 			            & IF (
-			                NOT ISBLANK ( [@ac] ),
-			                "<rect x='" & ( _x + 38 ) & "' y='" & FORMAT ( _base - _hA, "0.0" ) & "' width='34' height='" & FORMAT ( _hA, "0.0" ) & "' fill='%23404040'/>"
-			                    & "<text x='" & ( _x + 55 ) & "' y='" & FORMAT ( _base - MAX ( _hA, _hC ) - 8, "0.0" ) & "' class='v' text-anchor='middle'>$" & FORMAT ( [@ac] / 1e6, "0.0" ) & "M</text>"
+			                NOT ISBLANK ( [@actual] ),
+			                "<rect x='" & ( _x + 21 ) & "' y='" & FORMAT ( 520 - _hActual, "0.0" ) & "' width='30' height='" & FORMAT ( _hActual, "0.0" ) & "' fill='%231F1F1F'/>"
+			                    & "<text x='" & ( _x + 36 ) & "' y='" & FORMAT ( 512 - _top, "0.0" ) & "' class='v' text-anchor='middle'>" & FORMAT ( [@actual] / 1e6, "0.0" ) & "</text>"
 			            )
-			            & "<text x='" & ( _x + 50 ) & "' y='" & ( _base + 26 ) & "' class='k' text-anchor='middle'>" & 'Date'[Month] & "</text>"
+			            & "<text x='" & ( _x + 36 ) & "' y='544' class='k' text-anchor='middle'>" & 'Date'[Month] & "</text>"
 			            & IF (
-			                NOT ISBLANK ( _d ),
-			                "<rect x='" & ( _x + 30 ) & "' y='" & FORMAT ( _yD, "0.0" ) & "' width='40' height='" & FORMAT ( MAX ( _hD, 1 ), "0.0" ) & "' fill='" & IF ( _d < 0, "%23C0392B", "%232E8540" ) & "'/>"
-			                    & "<text x='" & ( _x + 50 ) & "' y='" & FORMAT ( _yDL, "0.0" ) & "' class='v' text-anchor='middle'>" & IF ( _d > 0, "+", IF ( _d < 0, "-", "" ) ) & "$" & FORMAT ( ABS ( _d ) / 1e6, "0.0" ) & "M</text>"
+			                ABS ( _delta ) >= 50000,
+			                "<rect x='" & ( _x + 21 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta, _zero ), "0.0" ) & "' width='30' height='" & FORMAT ( _hDelta, "0.0" ) & "' fill='" & IF ( _delta < 0, "%23B83A3A", "%233F8A54" ) & "'/>"
+			                    & "<text x='" & ( _x + 36 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta - 6, _zero + _hDelta + 16 ), "0.0" ) & "' class='v " & IF ( _delta < 0, "r", "g" ) & "' text-anchor='middle'>"
+			                    & FORMAT ( ROUND ( _delta / 1e6, 1 ), "+0.0;-0.0;0.0" ) & "</text>"
 			            ),
 			        "",
 			        'Date'[Year Month Key], ASC
 			    )
 			VAR _svg =
-			    "<svg xmlns='http://www.w3.org/2000/svg' width='1240' height='752' viewBox='0 0 1240 752'>"
-			    & "<style>text{font-family:Segoe UI,sans-serif}.t{font-size:19px;font-weight:600;fill:%23252423}"
-			    & ".k{font-size:16px;fill:%23605E5C}.s{font-size:15px;fill:%23605E5C}.n{font-size:16px;font-weight:600;fill:%23252423}"
-			    & ".v{font-size:15px;font-weight:600;fill:%23252423;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>"
-			    & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
-			    & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%23404040' stroke-width='2.5'/></pattern></defs>"
-			    & "<text x='16' y='28' class='t'>Net sales by month, $M: AC vs " & _code & "</text>"
-			    & "<rect x='16' y='45' width='14' height='14' fill='%23404040'/><text x='36' y='58' class='k'>AC (actual)</text>"
-			    & "<rect x='156' y='45' width='14' height='14' " & _cmpStyle & "/><text x='176' y='58' class='k'>" & _code & " (" & _name & ")</text>"
-			    & "<line x1='16' x2='1224' y1='" & _base & "' y2='" & _base & "' stroke='%23A6A6A6'/>"
-			    & "<text x='16' y='516' class='t'>&%23916;" & _code & " by month, $M</text>"
-			    & "<line x1='16' x2='1224' y1='" & FORMAT ( _zero, "0.0" ) & "' y2='" & FORMAT ( _zero, "0.0" ) & "' stroke='%23A6A6A6'/>"
-			    & _marks
-			    & "</svg>"
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='768' viewBox='0 0 1000 768'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.t{font-size:16px;font-weight:600}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}"
+			        & ".v{font-size:13px;font-weight:600}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%231F1F1F' stroke-width='2'/></pattern></defs>"
+			        & "<text x='20' y='30' class='t'>" & [Headline Subject] & " | USD m | AC vs " & _plan & " and PY | " & _year & " by month</text>"
+			        & "<rect x='20' y='50' width='14' height='14' fill='%231F1F1F'/><text x='40' y='62' class='k'>AC</text>"
+			        & "<rect x='80.6' y='50.6' width='12.8' height='12.8' " & _planStyle & "/><text x='100' y='62' class='k'>" & _plan & "</text>"
+			        & "<rect x='140' y='50' width='14' height='14' fill='%23A6A6A6'/><text x='160' y='62' class='k'>PY</text>"
+			        & "<line x1='72' x2='984' y1='520' y2='520' stroke='%239CA3AF'/>"
+			        & "<text x='20' y='" & FORMAT ( _zero + 5, "0.0" ) & "' class='k b'>&%23916;" & _code & "</text>"
+			        & "<line x1='72' x2='984' y1='" & FORMAT ( _zero, "0.0" ) & "' y2='" & FORMAT ( _zero, "0.0" ) & "' stroke='%239CA3AF'/>"
+			        & _marks
+			        & "</svg>"
 			RETURN
 			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
 		lineageTag: d13da117-338b-467a-bb85-9d9772e5739b
 		dataCategory: ImageUrl
 
-	/// SVG image for the Channel page: one row per channel and a total, with IBCS bars for PY, AC, BU and FC (hatched), and red/green variance bars in $M and % vs the comparison chosen in the Compare with slicer. Follows the Channel and Country slicers. 1144 x 512 px.
-	measure 'Channel Hero SVG' =
-			VAR _code = [Comparison Label]
-			VAR _name = SWITCH ( _code, "BU", "budget", "FC", "forecast", "last year" )
-			VAR _channels =
-			    SELECTCOLUMNS (
-			        VALUES ( 'Store'[Channel] ),
-			        "@name", 'Store'[Channel],
-			        "@order", IF ( 'Store'[Channel] = "Online", 1, 2 ),
-			        "@ac", CALCULATE ( [AC], 'Date'[Year] = 2025 ),
-			        "@py", CALCULATE ( [PY], 'Date'[Year] = 2025 ),
-			        "@bu", CALCULATE ( [BU], 'Date'[Year] = 2025 ),
-			        "@fc", CALCULATE ( [FC], 'Date'[Year] = 2025 ),
-			        "@d", CALCULATE ( [ΔCMP], 'Date'[Year] = 2025 ),
-			        "@p", CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025 )
+	/// SVG chart for the Channels page, 1000 x 520 px: the focus channel's sales by month (the clicked or selected channel, otherwise the one that contributes most to the variance) with IBCS overlapping columns for PY, BU or FC and AC, and a strip of variance columns vs the chosen comparison.
+	measure 'Focus Channel Monthly SVG' =
+			VAR _channel = [Focus Channel]
+			RETURN
+			    CALCULATE (
+			        VAR _code = [Comparison Label]
+			        VAR _plan = IF ( _code = "FC", "FC", "BU" )
+			        VAR _year = MAX ( 'Date'[Year] )
+			        VAR _months =
+			            ADDCOLUMNS (
+			                CALCULATETABLE ( SUMMARIZE ( 'Date', 'Date'[Year Month Key], 'Date'[Month Number], 'Date'[Month] ), 'Date'[Year] = _year ),
+			                "@actual", [AC],
+			                "@previous", [PY],
+			                "@plan", IF ( _plan = "FC", [FC], [BU] ),
+			                "@delta", [ΔCMP]
+			            )
+			        -- Columns stand on y = 316 and are at most 200 px tall
+			        VAR _max = MAXX ( _months, MAX ( MAX ( [@actual], [@previous] ), [@plan] ) )
+			        VAR _scale = DIVIDE ( 200, _max )
+			        -- Variance strip: zero line between y = 372 and 464
+			        VAR _up = MAX ( MAXX ( _months, [@delta] ), 0 )
+			        VAR _down = MAX ( - MINX ( _months, [@delta] ), 0 )
+			        VAR _zero = 372 + IF ( _up + _down = 0, 46, 92 * _up / ( _up + _down ) )
+			        VAR _vScale = DIVIDE ( 92, _up + _down )
+			        VAR _planStyle =
+			            IF (
+			                _plan = "FC",
+			                "fill='url(%23h)' stroke='%231F1F1F' stroke-width='1.2'",
+			                "fill='white' stroke='%231F1F1F' stroke-width='1.2'"
+			            )
+			        VAR _marks =
+			            CONCATENATEX (
+			                _months,
+			                VAR _x = 72 + ( 'Date'[Month Number] - 1 ) * 76
+			                VAR _hActual = [@actual] * _scale
+			                VAR _hPrevious = [@previous] * _scale
+			                VAR _hPlan = [@plan] * _scale
+			                VAR _top = MAX ( MAX ( _hActual, _hPrevious ), _hPlan )
+			                VAR _delta = [@delta]
+			                VAR _hDelta = ABS ( _delta ) * _vScale
+			                RETURN
+			                    IF ( NOT ISBLANK ( [@previous] ), "<rect x='" & ( _x + 8 ) & "' y='" & FORMAT ( 316 - _hPrevious, "0.0" ) & "' width='30' height='" & FORMAT ( _hPrevious, "0.0" ) & "' fill='%23A6A6A6'/>" )
+			                    & IF ( NOT ISBLANK ( [@plan] ), "<rect x='" & FORMAT ( _x + 34.6, "0.0" ) & "' y='" & FORMAT ( 316.6 - _hPlan, "0.0" ) & "' width='28.8' height='" & FORMAT ( MAX ( _hPlan - 1.2, 0 ), "0.0" ) & "' " & _planStyle & "/>" )
+			                    & IF (
+			                        NOT ISBLANK ( [@actual] ),
+			                        "<rect x='" & ( _x + 21 ) & "' y='" & FORMAT ( 316 - _hActual, "0.0" ) & "' width='30' height='" & FORMAT ( _hActual, "0.0" ) & "' fill='%231F1F1F'/>"
+			                            & "<text x='" & ( _x + 36 ) & "' y='" & FORMAT ( 308 - _top, "0.0" ) & "' class='v' text-anchor='middle'>" & FORMAT ( [@actual] / 1e6, "0.0" ) & "</text>"
+			                    )
+			                    & "<text x='" & ( _x + 36 ) & "' y='340' class='k' text-anchor='middle'>" & 'Date'[Month] & "</text>"
+			                    & IF (
+			                        ABS ( _delta ) >= 50000,
+			                        "<rect x='" & ( _x + 21 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta, _zero ), "0.0" ) & "' width='30' height='" & FORMAT ( _hDelta, "0.0" ) & "' fill='" & IF ( _delta < 0, "%23B83A3A", "%233F8A54" ) & "'/>"
+			                            & "<text x='" & ( _x + 36 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta - 6, _zero + _hDelta + 16 ), "0.0" ) & "' class='v " & IF ( _delta < 0, "r", "g" ) & "' text-anchor='middle'>"
+			                            & FORMAT ( ROUND ( _delta / 1e6, 1 ), "+0.0;-0.0;0.0" ) & "</text>"
+			                    ),
+			                "",
+			                'Date'[Year Month Key], ASC
+			            )
+			        VAR _svg =
+			            "<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='520' viewBox='0 0 1000 520'>"
+			                & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.t{font-size:16px;font-weight:600}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}"
+			                & ".v{font-size:13px;font-weight:600}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			                & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			                & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%231F1F1F' stroke-width='2'/></pattern></defs>"
+			                & "<text x='20' y='30' class='t'>" & IF ( _channel = "Stores", "Store", _channel ) & " sales | USD m | AC vs " & _plan & " and PY | " & _year & " by month</text>"
+			                & "<rect x='20' y='50' width='14' height='14' fill='%231F1F1F'/><text x='40' y='62' class='k'>AC</text>"
+			                & "<rect x='80.6' y='50.6' width='12.8' height='12.8' " & _planStyle & "/><text x='100' y='62' class='k'>" & _plan & "</text>"
+			                & "<rect x='140' y='50' width='14' height='14' fill='%23A6A6A6'/><text x='160' y='62' class='k'>PY</text>"
+			                & "<line x1='72' x2='984' y1='316' y2='316' stroke='%239CA3AF'/>"
+			                & "<text x='20' y='" & FORMAT ( _zero + 5, "0.0" ) & "' class='k b'>&%23916;" & _code & "</text>"
+			                & "<line x1='72' x2='984' y1='" & FORMAT ( _zero, "0.0" ) & "' y2='" & FORMAT ( _zero, "0.0" ) & "' stroke='%239CA3AF'/>"
+			                & _marks
+			                & "</svg>"
+			        RETURN
+			            IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg ),
+			        'Store'[Channel] = _channel
 			    )
-			VAR _total =
-			    ROW (
-			        "@name", "Total",
-			        "@order", 3,
-			        "@ac", CALCULATE ( [AC], 'Date'[Year] = 2025 ),
-			        "@py", CALCULATE ( [PY], 'Date'[Year] = 2025 ),
-			        "@bu", CALCULATE ( [BU], 'Date'[Year] = 2025 ),
-			        "@fc", CALCULATE ( [FC], 'Date'[Year] = 2025 ),
-			        "@d", CALCULATE ( [ΔCMP], 'Date'[Year] = 2025 ),
-			        "@p", CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025 )
+		displayFolder: Report visuals
+		lineageTag: 11b9550e-bde2-4f3c-8f31-663a8b3f4216
+		dataCategory: ImageUrl
+
+	/// SVG chart for the Outlook page, 1000 x 924 px: sales by month with PY grey behind, the June forecast FC 6+6 hatched behind for Jul-Dec, AC in front, and a strip of AC minus FC variance columns for Jul-Dec. Follows the Channel and Country slicers and clicks.
+	measure 'Outlook Monthly SVG' =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _months =
+			    ADDCOLUMNS (
+			        CALCULATETABLE ( SUMMARIZE ( 'Date', 'Date'[Year Month Key], 'Date'[Month Number], 'Date'[Month] ), 'Date'[Year] = _year ),
+			        "@actual", [AC],
+			        "@previous", [PY],
+			        "@forecast", IF ( 'Date'[Month Number] >= 7, [FC] ),
+			        "@delta", IF ( 'Date'[Month Number] >= 7, [ΔFC] )
 			    )
-			-- Total row only when more than one channel is shown
-			VAR _rows = UNION ( _channels, FILTER ( _total, COUNTROWS ( _channels ) > 1 ) )
-			VAR _rh = MIN ( 140, DIVIDE ( 420, COUNTROWS ( _rows ) ) )
-			-- Scenario bars: one scale for all rows, 300 px for the largest value
-			VAR _k = DIVIDE ( 300, MAXX ( _rows, MAX ( MAX ( [@ac], [@py] ), MAX ( [@bu], [@fc] ) ) ) )
-			-- Variance columns: zero line placed by the positive/negative extent, 70 px (60 px) left for labels on each side
-			VAR _dPos = MAX ( MAXX ( _rows, [@d] ), 0 )
-			VAR _dNeg = MAX ( - MINX ( _rows, [@d] ), 0 )
-			VAR _dZero = 650 + IF ( _dPos + _dNeg = 0, 70, 140 * _dNeg / ( _dPos + _dNeg ) )
-			VAR _dK = DIVIDE ( 140, _dPos + _dNeg )
-			VAR _pPos = MAX ( MAXX ( _rows, [@p] ), 0 )
-			VAR _pNeg = MAX ( - MINX ( _rows, [@p] ), 0 )
-			VAR _pZero = 960 + IF ( _pPos + _pNeg = 0, 60, 120 * _pNeg / ( _pPos + _pNeg ) )
-			VAR _pK = DIVIDE ( 120, _pPos + _pNeg )
-			VAR _yEnd = 80 + COUNTROWS ( _rows ) * _rh
+			-- Columns stand on y = 640 and are at most 460 px tall
+			VAR _max = MAXX ( _months, MAX ( MAX ( [@actual], [@previous] ), [@forecast] ) )
+			VAR _scale = DIVIDE ( 460, _max )
+			-- Variance strip: zero line between y = 716 and 856
+			VAR _up = MAX ( MAXX ( _months, [@delta] ), 0 )
+			VAR _down = MAX ( - MINX ( _months, [@delta] ), 0 )
+			VAR _zero = 716 + IF ( _up + _down = 0, 70, 140 * _up / ( _up + _down ) )
+			VAR _vScale = DIVIDE ( 140, _up + _down )
+			VAR _marks =
+			    CONCATENATEX (
+			        _months,
+			        VAR _x = 72 + ( 'Date'[Month Number] - 1 ) * 76
+			        VAR _hActual = [@actual] * _scale
+			        VAR _hPrevious = [@previous] * _scale
+			        VAR _hForecast = [@forecast] * _scale
+			        VAR _top = MAX ( MAX ( _hActual, _hPrevious ), _hForecast )
+			        VAR _delta = [@delta]
+			        VAR _hDelta = ABS ( _delta ) * _vScale
+			        RETURN
+			            IF ( NOT ISBLANK ( [@previous] ), "<rect x='" & ( _x + 8 ) & "' y='" & FORMAT ( 640 - _hPrevious, "0.0" ) & "' width='30' height='" & FORMAT ( _hPrevious, "0.0" ) & "' fill='%23A6A6A6'/>" )
+			            & IF ( NOT ISBLANK ( [@forecast] ), "<rect x='" & FORMAT ( _x + 34.6, "0.0" ) & "' y='" & FORMAT ( 640.6 - _hForecast, "0.0" ) & "' width='28.8' height='" & FORMAT ( MAX ( _hForecast - 1.2, 0 ), "0.0" ) & "' fill='url(%23h)' stroke='%231F1F1F' stroke-width='1.2'/>" )
+			            & IF (
+			                NOT ISBLANK ( [@actual] ),
+			                "<rect x='" & ( _x + 21 ) & "' y='" & FORMAT ( 640 - _hActual, "0.0" ) & "' width='30' height='" & FORMAT ( _hActual, "0.0" ) & "' fill='%231F1F1F'/>"
+			                    & "<text x='" & ( _x + 36 ) & "' y='" & FORMAT ( 632 - _top, "0.0" ) & "' class='v' text-anchor='middle'>" & FORMAT ( [@actual] / 1e6, "0.0" ) & "</text>"
+			            )
+			            & "<text x='" & ( _x + 36 ) & "' y='664' class='k' text-anchor='middle'>" & 'Date'[Month] & "</text>"
+			            & IF (
+			                ABS ( _delta ) >= 50000,
+			                "<rect x='" & ( _x + 21 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta, _zero ), "0.0" ) & "' width='30' height='" & FORMAT ( _hDelta, "0.0" ) & "' fill='" & IF ( _delta < 0, "%23B83A3A", "%233F8A54" ) & "'/>"
+			                    & "<text x='" & ( _x + 36 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta - 6, _zero + _hDelta + 16 ), "0.0" ) & "' class='v " & IF ( _delta < 0, "r", "g" ) & "' text-anchor='middle'>"
+			                    & FORMAT ( ROUND ( _delta / 1e6, 1 ), "+0.0;-0.0;0.0" ) & "</text>"
+			            ),
+			        "",
+			        'Date'[Year Month Key], ASC
+			    )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='924' viewBox='0 0 1000 924'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.t{font-size:16px;font-weight:600}.k{font-size:14px;fill:%236B7280}.b{font-weight:600}"
+			        & ".v{font-size:13px;font-weight:600}.s{font-size:12px;fill:%236B7280}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%231F1F1F' stroke-width='2'/></pattern></defs>"
+			        & "<text x='20' y='30' class='t'>" & [Headline Subject] & " | USD m | AC and FC 6+6 vs PY | " & _year & " by month</text>"
+			        & "<rect x='20' y='50' width='14' height='14' fill='%231F1F1F'/><text x='40' y='62' class='k'>AC</text>"
+			        & "<rect x='80.6' y='50.6' width='12.8' height='12.8' fill='url(%23h)' stroke='%231F1F1F' stroke-width='1.2'/><text x='100' y='62' class='k'>FC</text>"
+			        & "<rect x='140' y='50' width='14' height='14' fill='%23A6A6A6'/><text x='160' y='62' class='k'>PY</text>"
+			        & "<line x1='528' x2='528' y1='84' y2='640' stroke='%239CA3AF' stroke-dasharray='4 4'/>"
+			        & "<text x='80' y='100' class='s'>Jan&%238211;Jun: actuals (FC = AC)</text>"
+			        & "<text x='540' y='100' class='s'>Jul&%238211;Dec: forecast made in June vs actual</text>"
+			        & "<line x1='72' x2='984' y1='640' y2='640' stroke='%239CA3AF'/>"
+			        & "<text x='20' y='" & FORMAT ( _zero + 5, "0.0" ) & "' class='k b'>&%23916;FC</text>"
+			        & "<line x1='72' x2='984' y1='" & FORMAT ( _zero, "0.0" ) & "' y2='" & FORMAT ( _zero, "0.0" ) & "' stroke='%239CA3AF'/>"
+			        & _marks
+			        & "<text x='20' y='904' class='s'>&%23916;FC = AC minus the June forecast, Jul&%238211;Dec. Green: actual sales beat the forecast.</text>"
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: e58a430b-86d2-470e-bbac-4fb950310f43
+		dataCategory: ImageUrl
+
+	/// SVG chart for the Outlook page, 552 x 220 px: sales vs last year in % for H1 actual, H2 as forecast in June (hatched) and H2 actual. Follows the Channel and Country slicers and clicks.
+	measure 'Outlook Pace SVG' =
+			VAR _actualH1 = CALCULATE ( [AC], 'Date'[Month Number] <= 6 )
+			VAR _previousH1 = CALCULATE ( [PY], 'Date'[Month Number] <= 6 )
+			VAR _actualH2 = CALCULATE ( [AC], 'Date'[Month Number] >= 7 )
+			VAR _forecastH2 = CALCULATE ( [FC], 'Date'[Month Number] >= 7 )
+			VAR _previousH2 = CALCULATE ( [PY], 'Date'[Month Number] >= 7 )
+			VAR _rows =
+			    {
+			        ( 1, "H1 actual", DIVIDE ( _actualH1 - _previousH1, _previousH1 ), 0 ),
+			        ( 2, "H2 forecast", DIVIDE ( _forecastH2 - _previousH2, _previousH2 ), 1 ),
+			        ( 3, "H2 actual", DIVIDE ( _actualH2 - _previousH2, _previousH2 ), 0 )
+			    }
+			-- Bars share one scale: 280 px between the largest negative and positive value
+			VAR _up = MAX ( MAXX ( _rows, [Value3] ), 0 )
+			VAR _down = MAX ( - MINX ( _rows, [Value3] ), 0 )
+			VAR _zero = 190 + IF ( _up + _down = 0, 140, 280 * _down / ( _up + _down ) )
+			VAR _scale = DIVIDE ( 280, _up + _down )
 			VAR _marks =
 			    CONCATENATEX (
 			        _rows,
-			        VAR _o = [@order]
-			        VAR _i = COUNTROWS ( FILTER ( _rows, [@order] < _o ) )
-			        VAR _y0 = 80 + _i * _rh
-			        VAR _yb = _y0 + ( _rh - 95 ) / 2
-			        VAR _yc = _y0 + _rh / 2
-			        VAR _ac = [@ac]
-			        VAR _py = [@py]
-			        VAR _bu = [@bu]
-			        VAR _fc = [@fc]
-			        VAR _d = [@d]
-			        VAR _p = [@p]
-			        VAR _wD = MAX ( ABS ( _d ) * _dK, 1 )
-			        VAR _wP = MAX ( ABS ( _p ) * _pK, 1 )
-			        VAR _four = { ( "PY", 0, _py ), ( "AC", 1, _ac ), ( "BU", 2, _bu ), ( "FC", 3, _fc ) }
-			        VAR _bars =
-			            CONCATENATEX (
-			                _four,
-			                VAR _yy = _yb + [Value2] * 25
-			                VAR _w = [Value3] * _k
-			                -- outlined bars (BU, FC) are drawn 0.75 px inside so the 1.5 px stroke keeps the bar length
-			                VAR _rect =
-			                    SWITCH (
-			                        [Value1],
-			                        "PY", "<rect x='156' y='" & FORMAT ( _yy, "0.0" ) & "' width='" & FORMAT ( _w, "0.0" ) & "' height='20' fill='%23C8C8C8'/>",
-			                        "AC", "<rect x='156' y='" & FORMAT ( _yy, "0.0" ) & "' width='" & FORMAT ( _w, "0.0" ) & "' height='20' fill='%23404040'/>",
-			                        "<rect x='156.75' y='" & FORMAT ( _yy + 0.75, "0.0" ) & "' width='" & FORMAT ( MAX ( _w - 1.5, 0 ), "0.0" ) & "' height='18.5' fill='"
-			                            & IF ( [Value1] = "FC", "url(%23h)", "white" ) & "' stroke='%23404040' stroke-width='1.5'/>"
-			                    )
-			                RETURN
-			                    "<text x='148' y='" & FORMAT ( _yy + 15, "0.0" ) & "' class='s' text-anchor='end'>" & [Value1] & "</text>"
-			                        & IF (
-			                            NOT ISBLANK ( [Value3] ),
-			                            _rect & "<text x='" & FORMAT ( 162 + _w, "0.0" ) & "' y='" & FORMAT ( _yy + 15, "0.0" ) & "' class='v'>$" & FORMAT ( [Value3] / 1e6, "0.0" ) & "M</text>"
-			                        ),
-			                "",
-			                [Value2], ASC
-			            )
+			        VAR _y = 52 + ( [Value1] - 1 ) * 50
+			        VAR _p = [Value3]
+			        VAR _w = MAX ( ABS ( _p ) * _scale, 1 )
+			        VAR _color = IF ( _p < 0, "%23B83A3A", "%233F8A54" )
+			        -- the forecast bar is hatched in the variance colour
+			        VAR _fill = IF ( [Value4] = 1, IF ( _p < 0, "url(%23hr)", "url(%23hg)" ) & "' stroke='" & _color & "' stroke-width='1.2", _color )
 			        RETURN
-			            IF ( _i > 0, "<line x1='16' x2='1128' y1='" & FORMAT ( _y0, "0.0" ) & "' y2='" & FORMAT ( _y0, "0.0" ) & "' stroke='" & IF ( _o = 3, "%23A6A6A6", "%23E1DFDD" ) & "'/>" )
-			            & "<text x='16' y='" & FORMAT ( _yc + 6, "0.0" ) & "' class='n'>" & [@name] & "</text>"
-			            & _bars
-			            & IF (
-			                NOT ISBLANK ( _d ),
-			                "<rect x='" & FORMAT ( IF ( _d >= 0, _dZero, _dZero - _wD ), "0.0" ) & "' y='" & FORMAT ( _yc - 16, "0.0" ) & "' width='" & FORMAT ( _wD, "0.0" ) & "' height='32' fill='" & IF ( _d < 0, "%23C0392B", "%232E8540" ) & "'/>"
-			                    & "<text x='" & FORMAT ( IF ( _d >= 0, _dZero + _wD + 6, _dZero - _wD - 6 ), "0.0" ) & "' y='" & FORMAT ( _yc + 5, "0.0" ) & "' class='v' text-anchor='" & IF ( _d >= 0, "start", "end" ) & "'>"
-			                    & IF ( _d > 0, "+", IF ( _d < 0, "-", "" ) ) & "$" & FORMAT ( ABS ( _d ) / 1e6, "0.0" ) & "M</text>"
-			            )
+			            "<text x='16' y='" & ( _y + 19 ) & "' class='k'>" & [Value2] & "</text>"
 			            & IF (
 			                NOT ISBLANK ( _p ),
-			                "<rect x='" & FORMAT ( IF ( _p >= 0, _pZero, _pZero - _wP ), "0.0" ) & "' y='" & FORMAT ( _yc - 16, "0.0" ) & "' width='" & FORMAT ( _wP, "0.0" ) & "' height='32' fill='" & IF ( _p < 0, "%23C0392B", "%232E8540" ) & "'/>"
-			                    & "<text x='" & FORMAT ( IF ( _p >= 0, _pZero + _wP + 6, _pZero - _wP - 6 ), "0.0" ) & "' y='" & FORMAT ( _yc + 5, "0.0" ) & "' class='v' text-anchor='" & IF ( _p >= 0, "start", "end" ) & "'>"
-			                    & IF ( _p > 0, "+", IF ( _p < 0, "-", "" ) ) & FORMAT ( ABS ( _p ) * 100, "0.0" ) & "%25</text>"
+			                "<rect x='" & FORMAT ( IF ( _p < 0, _zero - _w, _zero ), "0.0" ) & "' y='" & _y & "' width='" & FORMAT ( _w, "0.0" ) & "' height='28' fill='" & _fill & "'/>"
+			                    & "<text x='" & FORMAT ( IF ( _p < 0, _zero - _w - 6, _zero + _w + 6 ), "0.0" ) & "' y='" & ( _y + 19 ) & "' class='v " & IF ( _p < 0, "r", "g" ) & "' text-anchor='" & IF ( _p < 0, "end", "start" ) & "'>"
+			                    & SUBSTITUTE ( FORMAT ( _p, "+0.0%;-0.0%;0.0%" ), "%", "%25" ) & "</text>"
 			            ),
 			        "",
-			        [@order], ASC
+			        [Value1], ASC
 			    )
 			VAR _svg =
-			    "<svg xmlns='http://www.w3.org/2000/svg' width='1144' height='512' viewBox='0 0 1144 512'>"
-			    & "<style>text{font-family:Segoe UI,sans-serif}.t{font-size:19px;font-weight:600;fill:%23252423}"
-			    & ".k{font-size:16px;fill:%23605E5C}.s{font-size:15px;fill:%23605E5C}.n{font-size:16px;font-weight:600;fill:%23252423}"
-			    & ".v{font-size:15px;font-weight:600;fill:%23252423;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>"
-			    & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
-			    & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%23404040' stroke-width='2.5'/></pattern></defs>"
-			    & "<text x='16' y='28' class='t'>Online vs Stores: net sales 2025, $M, and variance vs " & _name & "</text>"
-			    & "<text x='156' y='64' class='k'>PY, AC, BU, FC (hatched)</text>"
-			    & "<text x='720' y='64' class='k' text-anchor='middle'>&%23916;" & _code & ", $M</text>"
-			    & "<text x='1020' y='64' class='k' text-anchor='middle'>&%23916;" & _code & " %25</text>"
-			    & "<line x1='" & FORMAT ( _dZero, "0.0" ) & "' x2='" & FORMAT ( _dZero, "0.0" ) & "' y1='72' y2='" & FORMAT ( _yEnd, "0.0" ) & "' stroke='%23A6A6A6'/>"
-			    & "<line x1='" & FORMAT ( _pZero, "0.0" ) & "' x2='" & FORMAT ( _pZero, "0.0" ) & "' y1='72' y2='" & FORMAT ( _yEnd, "0.0" ) & "' stroke='%23A6A6A6'/>"
-			    & _marks
-			    & "</svg>"
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='552' height='220' viewBox='0 0 552 220'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.t{font-size:16px;font-weight:600}.k{font-size:14px;fill:%236B7280}"
+			        & ".v{font-size:13px;font-weight:600}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<defs><pattern id='hr' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%23B83A3A' stroke-width='2.5'/></pattern>"
+			        & "<pattern id='hg' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%233F8A54' stroke-width='2.5'/></pattern></defs>"
+			        & "<text x='16' y='28' class='t'>Sales | &%23916;PY %25 | H1 actual, H2 forecast and actual</text>"
+			        & "<line x1='" & FORMAT ( _zero, "0.0" ) & "' x2='" & FORMAT ( _zero, "0.0" ) & "' y1='46' y2='186' stroke='%239CA3AF'/>"
+			        & _marks
+			        & "</svg>"
 			RETURN
-			    IF ( NOT ISBLANK ( MAXX ( _rows, [@ac] ) ), "data:image/svg+xml;utf8," & _svg )
+			    IF ( NOT ISBLANK ( _previousH1 ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
-		lineageTag: db722ccf-7c63-41bd-b5df-e6a70faf5573
+		lineageTag: b4344293-912f-4894-b2f8-59b081608085
+		dataCategory: ImageUrl
+
+	/// SVG bridge for the Margin page, 1000 x 924 px: gross margin from PY (grey) to AC (dark) through the volume, product mix, price and unit cost effects (red/green). Follows the Channel and Country slicers and clicks.
+	measure 'Margin Bridge SVG' =
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _start = [Gross Margin PY]
+			VAR _end = [Gross Margin]
+			VAR _volume = [Margin Volume Effect]
+			VAR _price = [Margin Price Effect]
+			VAR _cost = [Margin Unit Cost Effect]
+			VAR _mix = ( _end - _start ) - _volume - _price - _cost
+			VAR _rateStart = [Gross Margin % PY]
+			VAR _rateEnd = [Gross Margin %]
+			VAR _level1 = _start + _volume
+			VAR _level2 = _level1 + _mix
+			VAR _level3 = _level2 + _price
+			VAR _steps =
+			    {
+			        ( 0, "PY", 0, _start ),
+			        ( 1, "Volume", _start, _level1 ),
+			        ( 2, "Product mix", _level1, _level2 ),
+			        ( 3, "Price and discount", _level2, _level3 ),
+			        ( 4, "Unit cost", _level3, _end ),
+			        ( 5, "AC", 0, _end )
+			    }
+			-- Columns stand on y = 800 and are at most 600 px tall
+			VAR _max = MAXX ( _steps, MAX ( [Value3], [Value4] ) )
+			VAR _scale = DIVIDE ( 600, _max )
+			VAR _marks =
+			    CONCATENATEX (
+			        _steps,
+			        VAR _i = [Value1]
+			        VAR _x = 90 + _i * 150
+			        VAR _from = [Value3]
+			        VAR _to = [Value4]
+			        VAR _change = _to - _from
+			        VAR _isTotal = _i = 0 || _i = 5
+			        VAR _yTop = 800 - MAX ( _from, _to ) * _scale
+			        VAR _h = MAX ( ABS ( _change ) * _scale, 1 )
+			        VAR _fill = SWITCH ( _i, 0, "%23A6A6A6", 5, "%231F1F1F", IF ( _change < 0, "%23B83A3A", "%233F8A54" ) )
+			        VAR _label = IF ( _isTotal, FORMAT ( _to / 1e6, "0.0" ), FORMAT ( ROUND ( _change / 1e6, 1 ), "+0.0;-0.0;0.0" ) )
+			        VAR _labelY = IF ( _isTotal || _change >= 0, _yTop - 8, _yTop + _h + 18 )
+			        RETURN
+			            "<rect x='" & _x & "' y='" & FORMAT ( _yTop, "0.0" ) & "' width='90' height='" & FORMAT ( _h, "0.0" ) & "' fill='" & _fill & "'/>"
+			            & "<text x='" & ( _x + 45 ) & "' y='" & FORMAT ( _labelY, "0.0" ) & "' class='v" & IF ( _isTotal, "", IF ( _change < 0, " r", " g" ) ) & "' text-anchor='middle'>" & _label & "</text>"
+			            & "<text x='" & ( _x + 45 ) & "' y='826' class='k' text-anchor='middle'>" & [Value2] & "</text>"
+			            & IF (
+			                _i < 5,
+			                "<line x1='" & ( _x + 90 ) & "' x2='" & ( _x + 150 ) & "' y1='" & FORMAT ( 800 - _to * _scale, "0.0" ) & "' y2='" & FORMAT ( 800 - _to * _scale, "0.0" ) & "' stroke='%239CA3AF' stroke-dasharray='3 3'/>"
+			            ),
+			        "",
+			        [Value1], ASC
+			    )
+			-- escape only the % of the rates: the arrow entity is already written as %23
+			VAR _rateLine =
+			    "Margin rate " & SUBSTITUTE ( FORMAT ( _rateStart, "0.0%" ), "%", "%25" ) & " (PY) &%238594; "
+			        & SUBSTITUTE ( FORMAT ( _rateEnd, "0.0%" ), "%", "%25" ) & " (AC), "
+			        & FORMAT ( ROUND ( ( _rateEnd - _rateStart ) * 100, 1 ), "+0.0;-0.0;0.0" ) & " pp"
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='924' viewBox='0 0 1000 924'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.t{font-size:16px;font-weight:600}.k{font-size:14px;fill:%236B7280}"
+			        & ".v{font-size:14px;font-weight:600}.s{font-size:12px;fill:%236B7280}.g{fill:%233F8A54}.r{fill:%23B83A3A}</style>"
+			        & "<text x='20' y='30' class='t'>" & SUBSTITUTE ( SUBSTITUTE ( [Headline Subject], "Sales", "Margin" ), "sales", "margin" ) & " | USD m | PY to AC bridge | " & _year & "</text>"
+			        & "<text x='20' y='56' class='k'>" & _rateLine & "</text>"
+			        & "<line x1='80' x2='940' y1='800' y2='800' stroke='%239CA3AF'/>"
+			        & _marks
+			        & "<text x='20' y='876' class='s'>Volume: change in units at last year's margin per unit. Product mix: selling a different mix of products.</text>"
+			        & "<text x='20' y='896' class='s'>Price and discount, unit cost: change per unit for products sold in both years.</text>"
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _start ) && NOT ISBLANK ( _end ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: 7f482900-a398-40ea-8834-f372121f115a
+		dataCategory: ImageUrl
+
+	/// SVG mini chart for the tooltip page, 464 x 236 px: the hovered item's sales by month, AC in front of the chosen comparison (PY grey, BU outlined, FC hatched), with a strip of variance columns.
+	measure 'Tooltip Monthly SVG' =
+			VAR _code = [Comparison Label]
+			VAR _year = MAX ( 'Date'[Year] )
+			VAR _style =
+			    SWITCH (
+			        _code,
+			        "PY", "fill='%23A6A6A6'",
+			        "FC", "fill='url(%23h)' stroke='%231F1F1F' stroke-width='1'",
+			        "fill='white' stroke='%231F1F1F' stroke-width='1'"
+			    )
+			VAR _months =
+			    ADDCOLUMNS (
+			        CALCULATETABLE ( SUMMARIZE ( 'Date', 'Date'[Year Month Key], 'Date'[Month Number], 'Date'[Month] ), 'Date'[Year] = _year ),
+			        "@actual", [AC],
+			        "@comparison", [CMP],
+			        "@delta", [ΔCMP]
+			    )
+			-- Columns stand on y = 150 and are at most 116 px tall; variance strip between y = 178 and 222
+			VAR _max = MAXX ( _months, MAX ( [@actual], [@comparison] ) )
+			VAR _scale = DIVIDE ( 116, _max )
+			VAR _up = MAX ( MAXX ( _months, [@delta] ), 0 )
+			VAR _down = MAX ( - MINX ( _months, [@delta] ), 0 )
+			VAR _zero = 178 + IF ( _up + _down = 0, 22, 44 * _up / ( _up + _down ) )
+			VAR _vScale = DIVIDE ( 44, _up + _down )
+			VAR _marks =
+			    CONCATENATEX (
+			        _months,
+			        VAR _x = 40 + ( 'Date'[Month Number] - 1 ) * 35
+			        VAR _hActual = [@actual] * _scale
+			        VAR _hComparison = [@comparison] * _scale
+			        VAR _delta = [@delta]
+			        VAR _hDelta = MAX ( ABS ( _delta ) * _vScale, 1 )
+			        RETURN
+			            IF ( NOT ISBLANK ( [@comparison] ), "<rect x='" & FORMAT ( _x + 12.5, "0.0" ) & "' y='" & FORMAT ( 150.5 - _hComparison, "0.0" ) & "' width='15' height='" & FORMAT ( MAX ( _hComparison - 1, 0 ), "0.0" ) & "' " & _style & "/>" )
+			            & IF ( NOT ISBLANK ( [@actual] ), "<rect x='" & ( _x + 4 ) & "' y='" & FORMAT ( 150 - _hActual, "0.0" ) & "' width='16' height='" & FORMAT ( _hActual, "0.0" ) & "' fill='%231F1F1F'/>" )
+			            & "<text x='" & ( _x + 14 ) & "' y='166' class='s' text-anchor='middle'>" & LEFT ( 'Date'[Month], 1 ) & "</text>"
+			            & IF (
+			                NOT ISBLANK ( _delta ),
+			                "<rect x='" & ( _x + 4 ) & "' y='" & FORMAT ( IF ( _delta > 0, _zero - _hDelta, _zero ), "0.0" ) & "' width='16' height='" & FORMAT ( _hDelta, "0.0" ) & "' fill='" & IF ( _delta < 0, "%23B83A3A", "%233F8A54" ) & "'/>"
+			            ),
+			        "",
+			        'Date'[Year Month Key], ASC
+			    )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='464' height='236' viewBox='0 0 464 236'>"
+			        & "<style>text{font-family:Segoe UI,sans-serif;fill:%231A1A1A}.s{font-size:11px;fill:%236B7280}.b{font-weight:600}</style>"
+			        & "<defs><pattern id='h' width='4' height='4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			        & "<rect width='4' height='4' fill='white'/><line x1='0' y1='0' x2='0' y2='4' stroke='%231F1F1F' stroke-width='1.4'/></pattern></defs>"
+			        & "<rect x='40' y='6' width='10' height='10' fill='%231F1F1F'/><text x='54' y='15' class='s'>AC</text>"
+			        & "<rect x='80.5' y='6.5' width='9' height='9' " & _style & "/><text x='94' y='15' class='s'>" & _code & "</text>"
+			        & "<text x='130' y='15' class='s'>by month, USD</text>"
+			        & "<line x1='36' x2='460' y1='150' y2='150' stroke='%239CA3AF'/>"
+			        & "<text x='2' y='" & FORMAT ( _zero + 4, "0.0" ) & "' class='s b'>&%23916;" & _code & "</text>"
+			        & "<line x1='36' x2='460' y1='" & FORMAT ( _zero, "0.0" ) & "' y2='" & FORMAT ( _zero, "0.0" ) & "' stroke='%239CA3AF'/>"
+			        & _marks
+			        & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: e95897c2-ec8a-4c24-9a29-3722c9fb9684
+		dataCategory: ImageUrl
+
+	/// SVG legend for the navy sidebar, 248 x 176 px: the IBCS notation used in the report (AC solid, FC hatched, BU outlined, PY grey, variances green/red). Static.
+	measure 'IBCS Legend SVG' =
+			"data:image/svg+xml;utf8,"
+			    & "<svg xmlns='http://www.w3.org/2000/svg' width='248' height='176' viewBox='0 0 248 176'>"
+			    & "<style>text{font-family:Segoe UI,sans-serif;font-size:13px;fill:%23E5E7EB}.c{font-size:11px;letter-spacing:1px;font-weight:600;fill:%239AA6C4}</style>"
+			    & "<defs><pattern id='h' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			    & "<line x1='0' y1='0' x2='0' y2='5' stroke='white' stroke-width='1.6'/></pattern></defs>"
+			    & "<text x='8' y='16' class='c'>IBCS NOTATION</text>"
+			    & "<rect x='8' y='32' width='22' height='12' fill='white'/><text x='40' y='43'>AC  Actual</text>"
+			    & "<rect x='8.5' y='56.5' width='21' height='11' fill='url(%23h)' stroke='white'/><text x='40' y='67'>FC  Forecast</text>"
+			    & "<rect x='8.5' y='80.5' width='21' height='11' fill='none' stroke='white'/><text x='40' y='91'>BU  Budget</text>"
+			    & "<rect x='8' y='104' width='22' height='12' fill='%23A6A6A6'/><text x='40' y='115'>PY  Previous year</text>"
+			    & "<rect x='8' y='128' width='10' height='12' fill='%233F8A54'/><rect x='20' y='128' width='10' height='12' fill='%23B83A3A'/>"
+			    & "<text x='40' y='139'>&%23916;  Variance +/&%238722;</text>"
+			    & "</svg>"
+		displayFolder: Report visuals
+		lineageTag: 9ab48ee4-c540-43f4-bcc8-3a44e233f3fa
 		dataCategory: ImageUrl
 
 	/// Order date key yyyymmdd.

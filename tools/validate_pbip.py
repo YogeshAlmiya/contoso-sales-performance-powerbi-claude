@@ -22,6 +22,8 @@ Checks the TMDL in <Name>.SemanticModel/definition without Power BI Desktop:
   - sort-by columns, hierarchies, relationships (types, one-side uniqueness in SQL)
   - date table: date key column, unique, contiguous
   - measures: format string, description and display folder (project convention)
+  - report tooltips: a tooltip page is flagged as one (page type, binding, hidden, tooltip size), and every
+    native chart, table and matrix by category, country or channel uses it as its report-page tooltip
 Exit code 1 if any check fails.
 """
 
@@ -166,7 +168,59 @@ def parse_relationships(path: Path) -> list[dict]:
 
 # --- checks -------------------------------------------------------------------
 
+# --- report tooltip wiring ----------------------------------------------------
+
+# Native visuals with one data point per item; hovering one should show the tooltip page
+TOOLTIP_VISUALS = {"clusteredBarChart", "clusteredColumnChart", "tableEx", "pivotTable"}
+# The items the tooltip page can name (its title measure reads Category, Country and Channel)
+TOOLTIP_FIELDS = {("Product", "Category"), ("Store", "Country"), ("Store", "Channel")}
+
+
+def literal(prop: dict | None) -> str | None:
+    """Plain value of a PBIR literal property: 'Canvas' -> Canvas, true -> true."""
+    try:
+        return prop["expr"]["Literal"]["Value"].strip("'")
+    except (KeyError, TypeError):
+        return None
+
+
+def check_tooltips(report_dir: Path) -> None:
+    pages_dir = report_dir / "definition" / "pages"
+    pages = {p.parent.name: json.loads(p.read_text(encoding="utf-8-sig")) for p in pages_dir.glob("*/page.json")}
+    tooltip_pages = {k for k, p in pages.items() if p.get("type") == "Tooltip" or p.get("pageBinding", {}).get("type") == "Tooltip"}
+    for k in sorted(tooltip_pages):
+        p = pages[k]
+        name = p.get("displayName", k)
+        # Desktop offers a page as a report-page tooltip only with page type Tooltip ("Allow use as tooltip")
+        check(p.get("type") == "Tooltip", f"REPORT tooltip page {name}: page type Tooltip (allow use as tooltip)")
+        check(p.get("pageBinding", {}).get("type") == "Tooltip", f"REPORT tooltip page {name}: page binding type Tooltip")
+        check(p.get("visibility") == "HiddenInViewMode", f"REPORT tooltip page {name}: hidden in view mode")
+        check(p.get("width", 9999) <= 640 and p.get("height", 9999) <= 480, f"REPORT tooltip page {name}: tooltip size (max 640 x 480)",
+              f"{p.get('width')} x {p.get('height')}")
+    for vf in sorted(pages_dir.glob("*/visuals/*/visual.json")):
+        page_id = vf.parent.parent.parent.name
+        if page_id in tooltip_pages:
+            continue
+        v = json.loads(vf.read_text(encoding="utf-8-sig"))
+        vis = v["visual"]
+        where = f"{pages[page_id].get('displayName', page_id)}/{v['name']} ({vis['visualType']})"
+        tip = (vis.get("visualContainerObjects", {}).get("visualTooltip") or [{}])[0].get("properties", {})
+        section = literal(tip.get("section"))
+        if literal(tip.get("type")) == "Canvas":
+            check(section in tooltip_pages, f"REPORT visual {where}: report-page tooltip points at a tooltip page", str(section))
+        fields = {
+            (proj["field"]["Column"]["Expression"]["SourceRef"]["Entity"], proj["field"]["Column"]["Property"])
+            for role in vis.get("query", {}).get("queryState", {}).values()
+            for proj in role.get("projections", [])
+            if "Column" in proj["field"]
+        }
+        if tooltip_pages and vis["visualType"] in TOOLTIP_VISUALS and fields & TOOLTIP_FIELDS:
+            check(literal(tip.get("show")) == "true" and literal(tip.get("type")) == "Canvas" and section in tooltip_pages,
+                  f"REPORT visual {where}: uses the report-page tooltip")
+
+
 def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8")  # rule names contain Δ; the Windows console default (cp1252) cannot print it
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     pbip = ROOT / (args[0] if args else "Contoso Sales.pbip")
     name = pbip.stem
@@ -221,8 +275,8 @@ def main() -> None:
 
         for mname, m in t["measures"].items():
             check(mname not in cols, f"MEASURE {tname}[{mname}]: name differs from columns in its table")
-            # Image URL measures (an SVG data URI) and report title measures return text, so a number format does not apply
-            is_text = m["props"].get("dataCategory") == "ImageUrl" or m["props"].get("displayFolder") == "Report titles"
+            # Image URL measures (an SVG data URI) and report title/text measures return text, so a number format does not apply
+            is_text = m["props"].get("dataCategory") == "ImageUrl" or m["props"].get("displayFolder") in ("Report titles", "Report text")
             for prop in ("displayFolder",) if is_text else ("formatString", "displayFolder"):
                 check(prop in m["props"], f"MEASURE {tname}[{mname}]: has {prop}")
             check(m["doc"], f"MEASURE {tname}[{mname}]: has description")
@@ -338,6 +392,8 @@ def main() -> None:
     for tname, t in tables.items():
         if not t["calc_group"] and tname not in disconnected:
             check(tname in related, f"TABLE {tname}: has a relationship")
+
+    check_tooltips(report_dir)
 
     print(f"{len(passes)} checks passed, {len(failures)} failed")
     for f in failures:

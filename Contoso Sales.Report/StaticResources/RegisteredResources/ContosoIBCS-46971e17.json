@@ -1,0 +1,141 @@
+{
+  "name": "ContosoIBCS-46971e17.json",
+  "dataColors": [
+    "#1F1F1F",
+    "#A6A6A6",
+    "#7F7F7F",
+    "#D1D5DB",
+    "#3F8A54",
+    "#B83A3A",
+    "#9CA3AF",
+    "#000000"
+  ],
+  "good": "#3F8A54",
+  "neutral": "#A6A6A6",
+  "bad": "#B83A3A",
+  "maximum": "#1F1F1F",
+  "center": "#A6A6A6",
+  "minimum": "#F2F2F2",
+  "null": "#D9D9D9",
+  "background": "#FFFFFF",
+  "foreground": "#1A1A1A",
+  "tableAccent": "#1F1F1F",
+  "firstLevelElements": "#1A1A1A",
+  "secondLevelElements": "#4B5563",
+  "textClasses": {
+    "callout": {
+      "fontSize": 22,
+      "fontFace": "Segoe UI",
+      "color": "#1A1A1A"
+    },
+    "title": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1A1A1A"
+    },
+    "largeTitle": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1A1A1A"
+    },
+    "header": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1A1A1A"
+    },
+    "label": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI",
+      "color": "#1A1A1A"
+    },
+    "semiboldLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1A1A1A"
+    },
+    "largeLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI",
+      "color": "#1A1A1A"
+    },
+    "boldLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1A1A1A"
+    },
+    "lightLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI",
+      "color": "#4B5563"
+    },
+    "largeLightLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI",
+      "color": "#4B5563"
+    },
+    "smallLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI",
+      "color": "#1A1A1A"
+    },
+    "smallLightLabel": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI",
+      "color": "#1A1A1A"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ],
+        "categoryAxis": [
+          {
+            "gridlineShow": false
+          }
+        ],
+        "valueAxis": [
+          {
+            "gridlineShow": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F3F4F6"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F3F4F6"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

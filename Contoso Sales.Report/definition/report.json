@@ -11,7 +11,7 @@
       "type": "SharedResources"
     },
     "customTheme": {
-      "name": "ContosoIBCS-eab16246.json",
+      "name": "ContosoIBCS-46971e17.json",
       "reportVersionAtImport": {
         "visual": "2.11.0",
         "report": "3.4.0",
@@ -37,8 +37,8 @@
       "type": "RegisteredResources",
       "items": [
         {
-          "name": "ContosoIBCS-eab16246.json",
-          "path": "ContosoIBCS-eab16246.json",
+          "name": "ContosoIBCS-46971e17.json",
+          "path": "ContosoIBCS-46971e17.json",
           "type": "CustomTheme"
         }
       ]
@@ -51,5 +51,27 @@
     "allowChangeFilterTypes": true,
     "useEnhancedTooltips": true,
     "useDefaultAggregateDisplayName": true
+  },
+  "objects": {
+    "outspacePane": [
+      {
+        "properties": {
+          "visible": {
+            "expr": {
+              "Literal": {
+                "Value": "false"
+              }
+            }
+          },
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "false"
+              }
+            }
+          }
+        }
+      }
+    ]
   }
 }
