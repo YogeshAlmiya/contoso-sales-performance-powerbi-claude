@@ -2,5 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 *.abf
-.pbi/localSettings.json
-.pbi/cache.abf
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+# Frames from the reference video: the author's material, kept locally only
+_brief/reference/

@@ -1,6 +1,6 @@
 # Reference design spec (from Ilya Fedorkov's video walkthrough)
 
-Source: the author's 11-minute video, read frame by frame. Frames are in `_brief/reference/ref_XX_tNNN.png` (NNN = second in the video).
+Source: the author's 11-minute video, read frame by frame. Frames were captured as `_brief/reference/ref_XX_tNNN.png` (NNN = second in the video); they are the author's material, so they stay local and are not in the repository.
 His data: EUR, year to date 19 Oct 2026, FC 9+3. **Ours: USD, full year 2025 (closed), FC 6+6.** Copy the design, not his numbers.
 
 ## 1. How he got there (the process matters more than the prompt)

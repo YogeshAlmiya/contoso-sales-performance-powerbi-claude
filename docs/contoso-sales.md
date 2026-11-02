@@ -595,5 +595,5 @@ Each visual's query was timed with a cold cache under BU, PY and FC. The slowest
 ### 9.3 Further reading
 
 - `_brief/report-spec.md`: the report spec as built, including where it differs from the plan.
-- `_brief/reference-design-spec.md` and `_brief/reference/`: the reference IBCS design this report follows.
+- `_brief/reference-design-spec.md`: the reference IBCS design this report follows, summarised from Ilya Fedorkov's video.
 - `_brief/prep-data-for-ai.md`: the Prep data for AI draft.
