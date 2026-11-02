@@ -4,7 +4,893 @@ cultureInfo en-US
 			{
 			  "Version": "2.0.0",
 			  "Language": "en-US",
-			  "Entities": {}
+			  "Entities": {
+			    "sales": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "transactions": {}
+			        },
+			        {
+			          "sales data": {}
+			        },
+			        {
+			          "orders": {}
+			        }
+			      ]
+			    },
+			    "store": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "shop": {}
+			        },
+			        {
+			          "outlet": {}
+			        },
+			        {
+			          "branch": {}
+			        }
+			      ]
+			    },
+			    "product": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Product"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "item": {}
+			        },
+			        {
+			          "article": {}
+			        },
+			        {
+			          "sku": {}
+			        }
+			      ]
+			    },
+			    "date": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "calendar": {}
+			        },
+			        {
+			          "dates": {}
+			        }
+			      ]
+			    },
+			    "scenario": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Scenario"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "version": {}
+			        },
+			        {
+			          "scenario type": {}
+			        }
+			      ]
+			    },
+			    "time": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Time"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "period to date": {}
+			        },
+			        {
+			          "time intelligence": {}
+			        }
+			      ]
+			    },
+			    "store.store_name": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store",
+			          "ConceptualProperty": "Store Name"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "shop name": {}
+			        },
+			        {
+			          "outlet name": {}
+			        }
+			      ]
+			    },
+			    "store.country": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store",
+			          "ConceptualProperty": "Country"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "market": {}
+			        },
+			        {
+			          "region": {}
+			        },
+			        {
+			          "country name": {}
+			        }
+			      ]
+			    },
+			    "store.country_code": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store",
+			          "ConceptualProperty": "Country Code"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "iso country code": {}
+			        }
+			      ]
+			    },
+			    "store.channel": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store",
+			          "ConceptualProperty": "Channel"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "sales channel": {}
+			        },
+			        {
+			          "channel type": {}
+			        }
+			      ]
+			    },
+			    "store.state": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store",
+			          "ConceptualProperty": "State"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "province": {}
+			        },
+			        {
+			          "state or province": {}
+			        }
+			      ]
+			    },
+			    "store.status": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Store",
+			          "ConceptualProperty": "Status"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "store status": {}
+			        },
+			        {
+			          "open or closed": {}
+			        }
+			      ]
+			    },
+			    "product.product_name": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Product",
+			          "ConceptualProperty": "Product Name"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "item name": {}
+			        },
+			        {
+			          "sku name": {}
+			        }
+			      ]
+			    },
+			    "product.category": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Product",
+			          "ConceptualProperty": "Category"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "product category": {}
+			        },
+			        {
+			          "product line": {}
+			        }
+			      ]
+			    },
+			    "product.subcategory": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Product",
+			          "ConceptualProperty": "Subcategory"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "product subcategory": {}
+			        },
+			        {
+			          "sub category": {}
+			        }
+			      ]
+			    },
+			    "product.brand": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Product",
+			          "ConceptualProperty": "Brand"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "manufacturer": {}
+			        },
+			        {
+			          "make": {}
+			        }
+			      ]
+			    },
+			    "date.year": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Year"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "calendar year": {}
+			        }
+			      ]
+			    },
+			    "date.year_month": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Year Month"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "year and month": {}
+			        },
+			        {
+			          "monthly period": {}
+			        }
+			      ]
+			    },
+			    "date.month": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Month"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "month name": {}
+			        }
+			      ]
+			    },
+			    "date.quarter": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Quarter"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "qtr": {}
+			        }
+			      ]
+			    },
+			    "date.year_quarter": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Year Quarter"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "year and quarter": {}
+			        }
+			      ]
+			    },
+			    "date.day_of_week": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Day of Week"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "weekday": {}
+			        },
+			        {
+			          "day name": {}
+			        }
+			      ]
+			    },
+			    "date.working_day": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Date",
+			          "ConceptualProperty": "Working Day"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "business day": {}
+			        },
+			        {
+			          "workday": {}
+			        }
+			      ]
+			    },
+			    "scenario.scenario": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Scenario",
+			          "ConceptualProperty": "Scenario"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "actual budget forecast": {}
+			        },
+			        {
+			          "plan version": {}
+			        }
+			      ]
+			    },
+			    "time.time": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Time",
+			          "ConceptualProperty": "Time"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "ytd mtd qtd": {}
+			        }
+			      ]
+			    },
+			    "sales.net_sales": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Net Sales"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "revenue": {}
+			        },
+			        {
+			          "sales": {}
+			        },
+			        {
+			          "turnover": {}
+			        },
+			        {
+			          "net revenue": {}
+			        },
+			        {
+			          "sales amount": {}
+			        }
+			      ]
+			    },
+			    "sales.sales_quantity": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Sales Quantity"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "units": {}
+			        },
+			        {
+			          "units sold": {}
+			        },
+			        {
+			          "volume": {}
+			        },
+			        {
+			          "quantity": {}
+			        }
+			      ]
+			    },
+			    "sales.cost": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Cost"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "cogs": {}
+			        },
+			        {
+			          "cost of goods sold": {}
+			        },
+			        {
+			          "cost of sales": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "gross profit": {}
+			        },
+			        {
+			          "margin": {}
+			        },
+			        {
+			          "gp": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "margin rate": {}
+			        },
+			        {
+			          "gross margin percent": {}
+			        },
+			        {
+			          "gm%": {}
+			        },
+			        {
+			          "margin %": {}
+			        }
+			      ]
+			    },
+			    "sales.ac": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "AC"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "actual": {}
+			        },
+			        {
+			          "actuals": {}
+			        },
+			        {
+			          "actual sales": {}
+			        }
+			      ]
+			    },
+			    "sales.py": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "PY"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "last year": {}
+			        },
+			        {
+			          "prior year": {}
+			        },
+			        {
+			          "previous year": {}
+			        },
+			        {
+			          "ly": {}
+			        }
+			      ]
+			    },
+			    "sales.bu": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "BU"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "budget": {}
+			        },
+			        {
+			          "plan": {}
+			        },
+			        {
+			          "target": {}
+			        }
+			      ]
+			    },
+			    "sales.fc": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "FC"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "forecast": {}
+			        },
+			        {
+			          "latest forecast": {}
+			        },
+			        {
+			          "outlook": {}
+			        }
+			      ]
+			    },
+			    "sales.δpy": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "ΔPY"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "change vs last year": {}
+			        },
+			        {
+			          "variance to last year": {}
+			        },
+			        {
+			          "yoy change": {}
+			        }
+			      ]
+			    },
+			    "sales.δpy_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "ΔPY %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "growth": {}
+			        },
+			        {
+			          "yoy growth": {}
+			        },
+			        {
+			          "year over year %": {}
+			        }
+			      ]
+			    },
+			    "sales.δbu": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "ΔBU"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "gap to budget": {}
+			        },
+			        {
+			          "variance to budget": {}
+			        },
+			        {
+			          "budget variance": {}
+			        }
+			      ]
+			    },
+			    "sales.δbu_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "ΔBU %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "% vs budget": {}
+			        },
+			        {
+			          "budget variance %": {}
+			        }
+			      ]
+			    },
+			    "sales.δfc": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "ΔFC"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "variance to forecast": {}
+			        },
+			        {
+			          "gap to forecast": {}
+			        }
+			      ]
+			    },
+			    "sales.δfc_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "ΔFC %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "% vs forecast": {}
+			        },
+			        {
+			          "forecast variance %": {}
+			        }
+			      ]
+			    },
+			    "sales.avg_net_price": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Avg Net Price"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "asp": {}
+			        },
+			        {
+			          "average selling price": {}
+			        },
+			        {
+			          "average price": {}
+			        }
+			      ]
+			    },
+			    "sales.avg_unit_cost": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Avg Unit Cost"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "average unit cost": {}
+			        },
+			        {
+			          "cost per unit": {}
+			        }
+			      ]
+			    },
+			    "sales.units_δpy_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Units ΔPY %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "unit growth": {}
+			        },
+			        {
+			          "volume growth": {}
+			        }
+			      ]
+			    },
+			    "sales.avg_net_price_δpy_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Avg Net Price ΔPY %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "price change": {}
+			        },
+			        {
+			          "asp change": {}
+			        }
+			      ]
+			    },
+			    "sales.avg_unit_cost_δpy_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Avg Unit Cost ΔPY %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "unit cost change": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin_py": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin PY"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "last year gross profit": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin_δpy": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin ΔPY"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "gross profit change": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin_δpy_pct": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin ΔPY %"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "gross profit growth": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin_pct_py": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin % PY"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "last year margin rate": {}
+			        }
+			      ]
+			    },
+			    "sales.gross_margin_pct_δpy_pp": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Gross Margin % ΔPY pp"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "margin rate change": {}
+			        },
+			        {
+			          "margin pp change": {}
+			        }
+			      ]
+			    },
+			    "sales.margin_volume_effect": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Margin Volume Effect"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "volume effect": {}
+			        }
+			      ]
+			    },
+			    "sales.margin_mix_effect": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Margin Mix Effect"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "mix effect": {}
+			        },
+			        {
+			          "product mix effect": {}
+			        }
+			      ]
+			    },
+			    "sales.margin_price_effect": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Margin Price Effect"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "price effect": {}
+			        }
+			      ]
+			    },
+			    "sales.margin_unit_cost_effect": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Sales",
+			          "ConceptualProperty": "Margin Unit Cost Effect"
+			        }
+			      },
+			      "Terms": [
+			        {
+			          "cost effect": {}
+			        },
+			        {
+			          "unit cost effect": {}
+			        }
+			      ]
+			    }
+			  }
 			}
 		contentType: json
 

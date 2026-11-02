@@ -1,51 +1,53 @@
-/// Stores, one row per store, including the online store (Country Code ONL, Country Online, Channel Online). The plan joins at Country Code. Source: view model.DimStore.
+/// Stores (shops) and the online store, with country and channel (Online or Stores). BU and FC exist by country or channel, not by store or state.
 table Store
 	lineageTag: c67d0a0c-6cce-4bab-9f4b-0f3e1e1980d5
 
-	/// Store identifier; joins Sales. 999999 is the online store.
+	/// Technical: store key joining Sales (999999 = online store); key of the Store table.
 	column 'Store Key'
 		dataType: int64
 		isHidden
+		isKey
 		lineageTag: 16602436-5da2-4f97-b800-dffe4d2d75ed
 		summarizeBy: none
 		sourceColumn: StoreKey
 
-	/// Store name. Restructured stores keep their name, so one name can cover two store rows. Below plan grain: budget and forecast are blank when filtered by store.
+	/// Store (shop) name; label of the Store table. One name can cover two rows after a restructuring. BU and FC are blank by store.
 	column 'Store Name'
 		dataType: string
+		isDefaultLabel
 		lineageTag: bab4b6e5-fa37-432a-8f4e-435efa979a42
 		summarizeBy: none
 		sourceColumn: StoreName
 
-	/// State or region of the store; Online for the online store. Below plan grain.
+	/// State or province of the store; Online for the online store. BU and FC are blank by state.
 	column State
 		dataType: string
 		lineageTag: 3a712090-a3be-4dea-bfbc-03f865dc48ad
 		summarizeBy: none
 		sourceColumn: State
 
-	/// ISO country code of the store; ONL for the online store. The level at which budget and forecast are set; joins the Plan table.
+	/// ISO country code of the store, ONL for the online store. Budget (BU) and forecast (FC) are set by country.
 	column 'Country Code'
 		dataType: string
 		lineageTag: e0f1481c-71e7-4a1f-860d-c159db13a3a7
 		summarizeBy: none
 		sourceColumn: CountryCode
 
-	/// Country name of the store; Online for the online store.
+	/// Country (market) of the store, Online for the online store. Budget (BU) and forecast (FC) are set by country.
 	column Country
 		dataType: string
 		lineageTag: 421ded82-efa4-4f22-8f2a-0fc7e2bb315e
 		summarizeBy: none
 		sourceColumn: CountryName
 
-	/// Stores for physical stores, Online for the online store. Derived from country, so budget and forecast work by channel.
+	/// Sales channel: Online (the online store) or Stores (physical shops). Budget and forecast work by channel.
 	column Channel
 		dataType: string
 		lineageTag: 52ca8dee-4d85-40c8-8df7-8eb9a97e24de
 		summarizeBy: none
 		sourceColumn: Channel
 
-	/// Open, Closed or Restructured. Source stores with no status are Closed if their close date is on or before 2025-12-31, otherwise Open.
+	/// Store status: Open, Closed or Restructured (closed on or before 2025-12-31 counts as Closed).
 	column Status
 		dataType: string
 		lineageTag: 1707959e-6853-478d-8cb5-c6159b51d7a3

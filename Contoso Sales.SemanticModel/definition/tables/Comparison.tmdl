@@ -1,24 +1,27 @@
-/// Scenarios AC can be compared with (PY, BU, FC), for the report's "Compare with" slicer. No relationships: the Comparison measures read the selected code, PY when nothing is selected. Source: view model.Comparison.
+/// Report only: the choices of the report's Compare with switch (PY, BU, FC). No relationships. For questions use the PY, BU and FC measures.
 table Comparison
+	isHidden
 	lineageTag: 8fdefa5f-8b96-4c58-81e9-c6f7446e9dbe
 
-	/// IBCS scenario code: PY, BU or FC.
+	/// Report only: comparison code PY, BU or FC used by the Compare with switch.
 	column Comparison
 		dataType: string
+		isKey
 		lineageTag: 673b8450-7fb4-4d4e-9671-b37ac4f06485
 		summarizeBy: none
 		sourceColumn: Comparison
 		sortByColumn: 'Sort Order'
 
-	/// Previous year, Budget or Forecast.
+	/// Report only: Previous year, Budget or Forecast, the label of the Compare with switch.
 	column 'Comparison Name'
 		dataType: string
+		isDefaultLabel
 		lineageTag: 4d1a17b5-170c-46ec-b30c-bb7fad41bc2e
 		summarizeBy: none
 		sourceColumn: ComparisonName
 		sortByColumn: 'Sort Order'
 
-	/// Slicer order: PY 1, BU 2, FC 3.
+	/// Report only: switch order PY 1, BU 2, FC 3.
 	column 'Sort Order'
 		dataType: int64
 		isHidden

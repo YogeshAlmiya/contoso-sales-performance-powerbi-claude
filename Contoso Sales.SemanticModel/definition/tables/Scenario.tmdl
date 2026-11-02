@@ -1,38 +1,39 @@
+/// Calculation group: AC, PY, BU, FC or a variance (ΔPY, ΔBU, ΔFC, also in %) for any measure. BU and FC: Net Sales only. Combine with Time, e.g. YTD + ΔBU.
 table Scenario
 	lineageTag: 851c2d0b-15dc-4c6a-a327-cfb955224f95
 
-	/// IBCS scenarios and variances. AC = actual, PY = previous year (actual shifted one year), BU = budget, FC = forecast. Δ items are AC minus the comparison; Δ% items divide by the comparison. BU and FC exist only for Net Sales (2025, month x country x category).
+	/// IBCS scenarios and variances, applied outside Time: YTD + ΔBU = year-to-date gap to budget. BU and FC: Net Sales only, month x category x country grain.
 	calculationGroup
 		precedence: 20
 
-		/// Actual.
+		/// Actual: the measure as recorded, same as no Scenario selection.
 		calculationItem AC = SELECTEDMEASURE ()
 
-		/// Previous year: the measure for the same period one year earlier.
+		/// Previous year: the same period one year earlier, for any measure. With Time YTD: last year's year to date.
 		calculationItem PY = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
 
-		/// Budget. Net Sales only; blank for other measures and below plan grain.
+		/// Budget 2025, Net Sales only (blank for cost, margin, units). Blank below month x category x country, e.g. by store, brand or day.
 		calculationItem BU =
 				IF (
 				    ISSELECTEDMEASURE ( [Net Sales] ),
 				    CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "BU" )
 				)
 
-		/// Forecast (Jan-Jun actuals, Jul-Dec reforecast). Net Sales only; blank for other measures and below plan grain.
+		/// Forecast 6+6 for 2025: Jan-Jun actuals, Jul-Dec forecast made in June. Net Sales only; blank below month x category x country.
 		calculationItem FC =
 				IF (
 				    ISSELECTEDMEASURE ( [Net Sales] ),
 				    CALCULATE ( [Plan Sales], 'Plan Version'[Scenario] = "FC" )
 				)
 
-		/// AC minus PY. Blank when either is blank.
+		/// Actual minus previous year. Positive = growth (good for revenue and margin, bad for cost). With Time YTD: YTD change vs last year.
 		calculationItem ΔPY =
 				VAR _actual = SELECTEDMEASURE ()
 				VAR _previousYear = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
 				RETURN
 				    IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _previousYear ), _actual - _previousYear )
 
-		/// (AC minus PY) divided by PY.
+		/// Actual vs previous year in %, (AC - PY) / PY. Positive = growth. With Time YTD: year-to-date growth.
 		calculationItem ΔPY% =
 				VAR _actual = SELECTEDMEASURE ()
 				VAR _previousYear = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
@@ -41,7 +42,7 @@ table Scenario
 
 			formatStringDefinition = "+0.0%;-0.0%;0.0%"
 
-		/// AC minus BU. Net Sales only.
+		/// Actual minus budget, Net Sales only. Negative = below budget (bad). With Time YTD: the year-to-date gap to budget.
 		calculationItem ΔBU =
 				IF (
 				    ISSELECTEDMEASURE ( [Net Sales] ),
@@ -51,7 +52,7 @@ table Scenario
 				        IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _budget ), _actual - _budget )
 				)
 
-		/// (AC minus BU) divided by BU. Net Sales only.
+		/// Actual vs budget in %, (AC - BU) / BU, Net Sales only. Negative = below budget (bad). Combine with Time YTD for YTD.
 		calculationItem ΔBU% =
 				IF (
 				    ISSELECTEDMEASURE ( [Net Sales] ),
@@ -63,7 +64,7 @@ table Scenario
 
 			formatStringDefinition = "+0.0%;-0.0%;0.0%"
 
-		/// AC minus FC (forecast accuracy). Net Sales only.
+		/// Actual minus forecast, Net Sales only; zero Jan-Jun 2025, where the forecast equals actuals. Positive = beat the forecast (good).
 		calculationItem ΔFC =
 				IF (
 				    ISSELECTEDMEASURE ( [Net Sales] ),
@@ -73,7 +74,7 @@ table Scenario
 				        IF ( NOT ISBLANK ( _actual ) && NOT ISBLANK ( _forecast ), _actual - _forecast )
 				)
 
-		/// (AC minus FC) divided by FC. Net Sales only.
+		/// Actual vs forecast in %, (AC - FC) / FC, Net Sales only. Positive = beat the forecast (good).
 		calculationItem ΔFC% =
 				IF (
 				    ISSELECTEDMEASURE ( [Net Sales] ),
@@ -85,7 +86,7 @@ table Scenario
 
 			formatStringDefinition = "+0.0%;-0.0%;0.0%"
 
-	/// Pick AC, PY, BU, FC or a variance. Put it on columns or in a slicer; with no selection, measures show actuals.
+	/// Pick a scenario for any measure: AC, PY, BU, FC, ΔPY, ΔPY%, ΔBU, ΔBU%, ΔFC, ΔFC%. BU and FC: Net Sales only. Combine with Time, e.g. YTD + ΔBU.
 	column Scenario
 		dataType: string
 		lineageTag: eaa51a4a-c25e-4ebe-b579-c72d39b57a3c
@@ -93,7 +94,7 @@ table Scenario
 		sourceColumn: Name
 		sortByColumn: Ordinal
 
-	/// Display order of scenario items.
+	/// Technical: display order of the scenario items.
 	column Ordinal
 		dataType: int64
 		isHidden

@@ -1,152 +1,152 @@
-/// Actual sales (AC) in USD, aggregated to day x store x product, 2016-05-18 to 2025-12-31. Net sales = quantity x net price; no exchange rate applied. Source: view model.FactSales.
+/// Sales transactions (actuals, AC) in USD by day, store and product, 2016-05-18 to 2025-12-31. Use its measures: Net Sales (revenue), Cost (COGS), Gross Margin, Sales Quantity.
 table Sales
 	lineageTag: e41b475d-f1a4-4d80-a104-7c11d35ecfa9
 
-	/// Net sales in USD: quantity x net price (after discounts). Source prices are already USD, so no exchange rate is applied. Use the Scenario calculation group for PY, BU, FC and variances, and the Time group for MTD/QTD/YTD.
+	/// Revenue (sales, turnover) in USD after discounts: quantity x net price. Higher is better. For PY, BU or FC use the PY, BU, FC measures or the Scenario group.
 	measure 'Net Sales' = SUM ( 'Sales'[Net Sales Amount] )
 		formatString: \$#,##0
 		displayFolder: Sales
 		lineageTag: bd67c0ba-17a2-4343-8ef4-43adebdd4202
 
-	/// Units sold. Supports AC and PY only; there is no quantity plan, so BU and FC are blank.
+	/// Units sold (volume). Higher is better. PY via the PY scenario; there is no unit budget or forecast, so BU and FC are blank.
 	measure 'Sales Quantity' = SUM ( 'Sales'[Quantity] )
 		formatString: #,##0
 		displayFolder: Sales
 		lineageTag: f795bad9-711d-4d0b-a932-f7f761895a44
 
-	/// Cost of goods sold in USD: quantity x unit cost. AC and PY only.
+	/// COGS (cost of goods sold) in USD: quantity x unit cost. Lower is better for margin. PY via the PY scenario; no cost budget or forecast (BU, FC blank).
 	measure Cost = SUM ( 'Sales'[Cost Amount] )
 		formatString: \$#,##0
 		displayFolder: Margin
 		lineageTag: 78557194-9198-4930-9797-640b3fec8c8e
 
-	/// Net sales minus cost of goods sold, USD. AC and PY only; the plan has no cost.
+	/// Gross profit in USD: revenue (Net Sales) minus COGS (Cost). Higher is better. PY via the PY scenario; no margin budget or forecast (BU, FC blank).
 	measure 'Gross Margin' = [Net Sales] - [Cost]
 		formatString: \$#,##0
 		displayFolder: Margin
 		lineageTag: 717029a4-3acd-4747-939e-ac3e4f62846d
 
-	/// Gross margin as a share of net sales. AC and PY only.
+	/// Gross margin rate: gross profit / revenue. Higher is better; compare years in pp with Gross Margin % ΔPY pp. No margin budget or forecast.
 	measure 'Gross Margin %' = DIVIDE ( [Gross Margin], [Net Sales] )
 		formatString: 0.0%
 		displayFolder: Margin
 		lineageTag: 29bc4af4-bd2a-4b1e-9f20-ffd3820a3381
 
-	/// Net Sales with the Scenario item AC applied: actual net sales, USD. A wrapper so report visuals can show scenarios side by side without putting the Scenario calculation group on a legend.
+	/// Actual revenue in USD, the same as Net Sales. Use it next to PY, BU and FC. Higher is better.
 	measure AC = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "AC" )
 		formatString: \$#,##0
 		displayFolder: Scenario measures
 		lineageTag: 4352f791-30c9-4b69-8bd1-0e0534a589fb
 
-	/// Net Sales with the Scenario item PY applied: actual net sales of the same period one year earlier, USD.
+	/// Previous-year revenue in USD: Net Sales of the same period one year earlier. Works at any grain.
 	measure PY = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "PY" )
 		formatString: \$#,##0
 		displayFolder: Scenario measures
 		lineageTag: d207066c-667b-4957-8ec7-309eda4fa6df
 
-	/// Net Sales with the Scenario item BU applied: budget, USD. Blank below plan grain (month x category x country).
+	/// Budget revenue in USD, 2025 only, by month x category x country; blank below that grain (store, brand, day). No budget for cost, margin or units.
 	measure BU = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU" )
 		formatString: \$#,##0
 		displayFolder: Scenario measures
 		lineageTag: 5b3af94c-4be3-40f7-a424-d93a2ab51c67
 
-	/// Net Sales with the Scenario item FC applied: latest forecast (Jan-Jun actuals, Jul-Dec forecast), USD. Blank below plan grain (month x category x country).
+	/// Forecast 6+6 revenue in USD for 2025: Jan-Jun actuals plus the Jul-Dec forecast made in June. Month x category x country grain; blank below it.
 	measure FC = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "FC" )
 		formatString: \$#,##0
 		displayFolder: Scenario measures
 		lineageTag: 7a22e9a5-c750-4041-be07-14f5dd555a76
 
-	/// Net Sales with the Scenario item ΔPY applied: AC minus PY, USD.
+	/// Revenue change vs last year in USD: AC - PY. Positive = growth (good).
 	measure ΔPY = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔPY" )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Scenario measures
 		lineageTag: 9ddf70dd-fff7-413d-9eb3-cd846aa28fa3
 
-	/// Net Sales with the Scenario item ΔPY% applied: (AC minus PY) divided by PY.
+	/// Revenue growth vs last year in %: (AC - PY) / PY. Positive is good.
 	measure 'ΔPY %' = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔPY%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Scenario measures
 		lineageTag: 69bcdb85-66b2-48c2-8ca0-db4afc64a0c1
 
-	/// Net Sales with the Scenario item ΔBU applied: AC minus BU, USD. Blank below plan grain.
+	/// Revenue gap to budget in USD: AC - BU. Negative = below budget (bad). 2025 only, by month x category x country.
 	measure ΔBU = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU" )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Scenario measures
 		lineageTag: 5b3dc48a-d151-4e19-9941-a4fa138c07d1
 
-	/// Net Sales with the Scenario item ΔBU% applied: (AC minus BU) divided by BU. Blank below plan grain.
+	/// Revenue vs budget in %: (AC - BU) / BU. Negative = below budget (bad). 2025 only, by month x category x country.
 	measure 'ΔBU %' = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔBU%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Scenario measures
 		lineageTag: 50159283-67a5-4d4a-94cf-031a4cfa87f1
 
-	/// Net Sales with the Scenario item ΔFC applied: AC minus FC, USD. Blank below plan grain.
+	/// Revenue vs forecast in USD: AC - FC. Positive = beat the forecast (good). Zero Jan-Jun 2025, where the forecast equals actuals.
 	measure ΔFC = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔFC" )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Scenario measures
 		lineageTag: 9126bb77-bf6e-4f56-a844-c359f1fe2c0e
 
-	/// Net Sales with the Scenario item ΔFC% applied: (AC minus FC) divided by FC. Blank below plan grain.
+	/// Revenue vs forecast in %: (AC - FC) / FC. Positive = beat the forecast (good). 2025 only.
 	measure 'ΔFC %' = CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "ΔFC%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Scenario measures
 		lineageTag: a5efa88d-e59f-4c2a-b961-b8b15420e301
 
-	/// Average net price per unit sold, USD: net sales divided by units. AC and PY only (the plan has no units). List prices per product did not change in 2025, so its change mostly reflects product mix.
+	/// Average selling price (ASP) per unit in USD: revenue / units. List prices did not change in 2025, so changes mostly reflect product mix.
 	measure 'Avg Net Price' = DIVIDE ( [Net Sales], [Sales Quantity] )
 		formatString: \$#,##0.00
 		displayFolder: Sales
 		lineageTag: 32a39f5e-07d8-439a-a390-f7a5b153e112
 
-	/// Average cost per unit sold, USD: cost divided by units. AC and PY only.
+	/// Average cost (COGS) per unit sold in USD: Cost / units. Lower is better for margin.
 	measure 'Avg Unit Cost' = DIVIDE ( [Cost], [Sales Quantity] )
 		formatString: \$#,##0.00
 		displayFolder: Margin
 		lineageTag: a0fb9633-d195-4ba2-96da-5a280e480117
 
-	/// Units sold vs the same period last year, in %. Compared with PY because the plan has no units.
+	/// Unit (volume) growth vs last year in %. Positive is good. Compared with PY because the plan has no units.
 	measure 'Units ΔPY %' = CALCULATE ( [Sales Quantity], 'Scenario'[Scenario] = "ΔPY%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Drivers vs PY
 		lineageTag: a9d71987-c279-4a6e-b0d9-ada3ad4e62af
 
-	/// Average net price per unit vs the same period last year, in %. Reflects product mix and discounts (list prices per product did not change in 2025).
+	/// Change in average selling price per unit vs last year, in %. Reflects product mix and discounts; list prices per product did not change in 2025.
 	measure 'Avg Net Price ΔPY %' = CALCULATE ( [Avg Net Price], 'Scenario'[Scenario] = "ΔPY%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Drivers vs PY
 		lineageTag: bbdb6981-81a6-40cf-810b-947234ca3065
 
-	/// Average cost per unit vs the same period last year, in %. A rise is bad for margin.
+	/// Change in average cost per unit vs last year, in %. A rise is bad for margin.
 	measure 'Avg Unit Cost ΔPY %' = CALCULATE ( [Avg Unit Cost], 'Scenario'[Scenario] = "ΔPY%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Drivers vs PY
 		lineageTag: d1403a0a-62b9-4200-9d2f-ad5d8ded3e08
 
-	/// Gross margin of the same period last year, USD.
+	/// Last year's gross profit in USD: Gross Margin of the same period one year earlier.
 	measure 'Gross Margin PY' = CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "PY" )
 		formatString: \$#,##0
 		displayFolder: Margin
 		lineageTag: ad6c64f8-143b-4a0e-8e4d-d773d7428764
 
-	/// Gross margin minus last year's gross margin, USD. Equals the sum of the four margin bridge effects.
+	/// Gross profit change vs last year in USD. Positive is good. Equals the sum of the four margin bridge effects.
 	measure 'Gross Margin ΔPY' = CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "ΔPY" )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Margin
 		lineageTag: 728b7c22-c466-4367-bd10-fd6dd455150e
 
-	/// Gross margin vs last year, in %.
+	/// Gross profit growth vs last year in %. Positive is good.
 	measure 'Gross Margin ΔPY %' = CALCULATE ( [Gross Margin], 'Scenario'[Scenario] = "ΔPY%" )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Margin
 		lineageTag: 72c26ba9-2808-4282-8f25-e01e7d37ed9d
 
-	/// Gross margin rate of the same period last year.
+	/// Last year's gross margin rate, same period one year earlier.
 	measure 'Gross Margin % PY' = CALCULATE ( [Gross Margin %], 'Scenario'[Scenario] = "PY" )
 		formatString: 0.0%
 		displayFolder: Margin
 		lineageTag: 0b0e4609-fb80-448b-9839-b4ae9171457a
 
-	/// Gross margin rate in the last month with sales in the selected period, blank in the other months. Labels the end of the AC line in the margin rate chart.
+	/// Report only: Gross margin rate in the last month with sales in the selected period, blank in the other months. Labels the end of the AC line in the margin rate chart.
 	measure 'Gross Margin % Last Month' =
 			VAR _month = SELECTEDVALUE ( 'Date'[Month Number] )
 			VAR _last =
@@ -158,9 +158,10 @@ table Sales
 			    IF ( _month = _last, [Gross Margin %] )
 		formatString: 0.0%
 		displayFolder: Margin
+		isHidden
 		lineageTag: 8e229230-6d59-4b01-a31c-ab750fc182e9
 
-	/// Gross margin rate of the same period last year in the last month with sales in the selected period, blank in the other months. Labels the end of the PY line in the margin rate chart.
+	/// Report only: Gross margin rate of the same period last year in the last month with sales in the selected period, blank in the other months. Labels the end of the PY line in the margin rate chart.
 	measure 'Gross Margin % PY Last Month' =
 			VAR _month = SELECTEDVALUE ( 'Date'[Month Number] )
 			VAR _last =
@@ -172,9 +173,10 @@ table Sales
 			    IF ( _month = _last, [Gross Margin % PY] )
 		formatString: 0.0%
 		displayFolder: Margin
+		isHidden
 		lineageTag: ac9b6356-b1dc-4a13-8f31-c58b6f7519f2
 
-	/// Gross margin rate minus last year's rate, in percentage points (pp). Changes that round to 0.0 pp return 0, so labels never show -0.0 pp.
+	/// Margin rate change vs last year in percentage points (pp). Positive is good; changes that round to 0.0 pp show as 0.
 	measure 'Gross Margin % ΔPY pp' =
 			VAR _actual = [Gross Margin %]
 			VAR _previousYear = [Gross Margin % PY]
@@ -185,7 +187,7 @@ table Sales
 		displayFolder: Margin
 		lineageTag: 109322d1-2464-45a0-a530-49c3f2074d6a
 
-	/// Margin bridge PY to AC, volume step: the change in units sold valued at last year's average margin per unit, USD, rounded to the cent.
+	/// Margin bridge PY to AC: gross profit change from units sold, valued at last year's margin per unit, USD. Positive is good.
 	measure 'Margin Volume Effect' =
 			VAR _units = [Sales Quantity]
 			VAR _unitsPY = CALCULATE ( [Sales Quantity], 'Scenario'[Scenario] = "PY" )
@@ -197,7 +199,7 @@ table Sales
 		displayFolder: Margin bridge
 		lineageTag: 2b66fb6d-9751-4a28-aa87-840a07368bde
 
-	/// Margin bridge PY to AC, price step: for products sold in both years, this year's units times the change in net price per unit (list price and discount), USD, rounded to the cent.
+	/// Margin bridge PY to AC: gross profit change from net price per unit (list price, discount), products sold in both years, USD. Positive is good.
 	measure 'Margin Price Effect' =
 			VAR _products =
 			    ADDCOLUMNS (
@@ -218,7 +220,7 @@ table Sales
 		displayFolder: Margin bridge
 		lineageTag: dc491a19-af8c-426a-973c-69f20cea6b83
 
-	/// Margin bridge PY to AC, unit cost step: for products sold in both years, this year's units times the change in cost per unit, with higher costs negative, USD, rounded to the cent.
+	/// Margin bridge PY to AC: gross profit change from cost per unit, products sold in both years, USD. Negative = costs rose (bad).
 	measure 'Margin Unit Cost Effect' =
 			VAR _products =
 			    ADDCOLUMNS (
@@ -239,7 +241,7 @@ table Sales
 		displayFolder: Margin bridge
 		lineageTag: bb858fc6-191d-41c0-a057-9eebfcbf97b5
 
-	/// Margin bridge PY to AC, product mix step: the margin change left after volume, price and unit cost, i.e. the effect of selling a different mix of products (including products new or dropped this year), USD.
+	/// Margin bridge PY to AC: gross profit change from a different product mix, incl. new or dropped products, USD. Positive is good.
 	measure 'Margin Mix Effect' =
 			VAR _change = [Gross Margin ΔPY]
 			RETURN
@@ -248,63 +250,73 @@ table Sales
 		displayFolder: Margin bridge
 		lineageTag: 0e82ec44-b25b-4766-a56f-5905da23ec15
 
-	/// Comparison chosen in the report's Compare with slicer: PY, BU or FC. BU when nothing or more than one is selected. Text, used by the comparison measures, headlines and dynamic titles.
+	/// Report only: Comparison chosen in the report's Compare with slicer: PY, BU or FC. BU when nothing or more than one is selected. Text, used by the comparison measures, headlines and dynamic titles.
 	measure 'Comparison Label' = SELECTEDVALUE ( 'Comparison'[Comparison], "BU" )
 		displayFolder: Report titles
+		isHidden
 		lineageTag: da588170-5a71-4375-a61a-4e831e14fd93
 
-	/// The Compare with choice in words for headlines: budget, forecast or last year.
+	/// Report only: The Compare with choice in words for headlines: budget, forecast or last year.
 	measure 'Comparison Name' = SWITCH ( [Comparison Label], "BU", "budget", "FC", "forecast", "last year" )
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 9d6648ef-b3e0-4f02-b4bb-4723d0fb10f8
 
-	/// Net sales of the comparison chosen in the Compare with slicer: PY, BU or FC (BU by default). Same values as the PY, BU and FC measures.
+	/// Report only: Net sales of the comparison chosen in the Compare with slicer: PY, BU or FC (BU by default). Same values as the PY, BU and FC measures.
 	measure CMP = SWITCH ( [Comparison Label], "BU", [BU], "FC", [FC], [PY] )
 		formatString: \$#,##0
 		displayFolder: Comparison
+		isHidden
 		lineageTag: 0d22ef29-29df-4c9b-815e-8b390ff11229
 
-	/// AC minus the comparison chosen in the Compare with slicer: ΔPY, ΔBU or ΔFC (ΔBU by default).
+	/// Report only: AC minus the comparison chosen in the Compare with slicer: ΔPY, ΔBU or ΔFC (ΔBU by default).
 	measure ΔCMP = SWITCH ( [Comparison Label], "BU", [ΔBU], "FC", [ΔFC], [ΔPY] )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Comparison
+		isHidden
 		lineageTag: 107fd6f5-2396-4251-a2e6-09342695ff85
 
-	/// AC vs the comparison chosen in the Compare with slicer, in %: ΔPY %, ΔBU % or ΔFC % (ΔBU % by default).
+	/// Report only: AC vs the comparison chosen in the Compare with slicer, in %: ΔPY %, ΔBU % or ΔFC % (ΔBU % by default).
 	measure 'ΔCMP %' = SWITCH ( [Comparison Label], "BU", [ΔBU %], "FC", [ΔFC %], [ΔPY %] )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Comparison
+		isHidden
 		lineageTag: b4a78004-15bf-41fc-b630-3aeb5829ec94
 
-	/// Second comparison shown beside the Compare with choice: PY when BU or FC is chosen, BU when PY is chosen. Text.
+	/// Report only: Second comparison shown beside the Compare with choice: PY when BU or FC is chosen, BU when PY is chosen. Text.
 	measure 'CMP2 Label' = IF ( [Comparison Label] = "PY", "BU", "PY" )
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 41501c55-6148-465d-b235-382bdc4fecbc
 
-	/// The second comparison in words for headlines: budget or last year.
+	/// Report only: The second comparison in words for headlines: budget or last year.
 	measure 'CMP2 Name' = IF ( [CMP2 Label] = "BU", "budget", "last year" )
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 8582e7f4-427e-423e-b9a9-54f7bc326a77
 
-	/// Net sales of the second comparison: PY, or BU when PY is chosen in the Compare with slicer.
+	/// Report only: Net sales of the second comparison: PY, or BU when PY is chosen in the Compare with slicer.
 	measure CMP2 = IF ( [CMP2 Label] = "BU", [BU], [PY] )
 		formatString: \$#,##0
 		displayFolder: Comparison
+		isHidden
 		lineageTag: 48649c5a-5d5a-4997-a338-2ea7082ce54c
 
-	/// AC minus the second comparison: ΔPY, or ΔBU when PY is chosen in the Compare with slicer.
+	/// Report only: AC minus the second comparison: ΔPY, or ΔBU when PY is chosen in the Compare with slicer.
 	measure ΔCMP2 = IF ( [CMP2 Label] = "BU", [ΔBU], [ΔPY] )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Comparison
+		isHidden
 		lineageTag: 81c47cb6-2a2a-45e7-9a6a-5a1dc0732b09
 
-	/// AC vs the second comparison, in %: ΔPY %, or ΔBU % when PY is chosen in the Compare with slicer.
+	/// Report only: AC vs the second comparison, in %: ΔPY %, or ΔBU % when PY is chosen in the Compare with slicer.
 	measure 'ΔCMP2 %' = IF ( [CMP2 Label] = "BU", [ΔBU %], [ΔPY %] )
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Comparison
+		isHidden
 		lineageTag: acee5da7-e97f-48f7-8846-3eda205a4b37
 
-	/// Channel the Channels page focuses on: the single channel in the filter context (slicer or click), otherwise the channel that contributes most to the total variance vs the chosen comparison. Ignores product filters so it stays the same on every row of a chart by category. Text.
+	/// Report only: Channel the Channels page focuses on: the single channel in the filter context (slicer or click), otherwise the channel that contributes most to the total variance vs the chosen...
 	measure 'Focus Channel' =
 			VAR _selected = SELECTEDVALUE ( 'Store'[Channel] )
 			VAR _channels =
@@ -320,18 +332,20 @@ table Sales
 			        MAXX ( TOPN ( 1, _channels, [@delta] * _sign, DESC ), 'Store'[Channel] )
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: 0603e39c-b515-41ee-981f-738ad831fdc9
 
-	/// ΔCMP for the focus channel of the Channels page (the clicked or selected channel, otherwise the one that contributes most to the variance).
+	/// Report only: ΔCMP for the focus channel of the Channels page (the clicked or selected channel, otherwise the one that contributes most to the variance).
 	measure 'ΔCMP Focus Channel' =
 			VAR _channel = [Focus Channel]
 			RETURN
 			    CALCULATE ( [ΔCMP], 'Store'[Channel] = _channel )
 		formatString: +\$#,##0;-\$#,##0;\$0
 		displayFolder: Comparison
+		isHidden
 		lineageTag: d968cd3c-c95c-4957-9d0e-2725f1fdea2b
 
-	/// Subject for headlines and chart titles from the active filters: Sales, Online sales, Store sales, Sales in Germany, Computers sales in the United States. Text.
+	/// Report only: Subject for headlines and chart titles from the active filters: Sales, Online sales, Store sales, Sales in Germany, Computers sales in the United States. Text.
 	measure 'Headline Subject' =
 			VAR _category = IF ( ISFILTERED ( 'Product'[Category] ), SELECTEDVALUE ( 'Product'[Category] ) )
 			VAR _country = IF ( ISFILTERED ( 'Store'[Country] ), SELECTEDVALUE ( 'Store'[Country] ) )
@@ -354,9 +368,10 @@ table Sales
 			        "Sales" & _where
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: 75cf4f10-9fed-4668-bcbe-f3c955f8c4d5
 
-	/// Overview page headline: AC vs the chosen comparison and the second comparison, and the channel (or, with one channel, the category) that carries most of the gap. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	/// Report only: Overview page headline: AC vs the chosen comparison and the second comparison, and the channel (or, with one channel, the category) that carries most of the gap.
 	measure 'Headline Overview' =
 			VAR _subject = [Headline Subject]
 			VAR _delta = [ΔCMP]
@@ -398,9 +413,10 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _delta ), _subject & " are " & _vs1 & _vs2 & _driver )
 		displayFolder: Report text
+		isHidden
 		lineageTag: 39918caa-b7d2-4f7f-83f1-6faaf777cbd8
 
-	/// Channels page headline: the focus channel's share of the gap to the chosen comparison and its change vs the second comparison. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	/// Report only: Channels page headline: the focus channel's share of the gap to the chosen comparison and its change vs the second comparison.
 	measure 'Headline Channels' =
 			VAR _channel = [Focus Channel]
 			VAR _plural = _channel = "Stores"
@@ -439,9 +455,10 @@ table Sales
 			        )
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: 8d66ec9d-462e-42d5-80d4-336fa8ce8e87
 
-	/// Products page headline: the category that carries most of the gap to the chosen comparison, and its units vs last year (the plan has no units). Follows the Channel and Country slicers, clicks and Compare with. Text.
+	/// Report only: Products page headline: the category that carries most of the gap to the chosen comparison, and its units vs last year (the plan has no units).
 	measure 'Headline Products' =
 			VAR _delta = [ΔCMP]
 			VAR _items = SELECTCOLUMNS ( VALUES ( 'Product'[Category] ), "@name", 'Product'[Category], "@delta", [ΔCMP] )
@@ -470,9 +487,10 @@ table Sales
 			        )
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: 3c775ef4-52dd-4bf8-9391-1a0b53d9cfce
 
-	/// Regions page headline: the one or two countries that carry most of the gap to the chosen comparison, and the net variance of the others. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	/// Report only: Regions page headline: the one or two countries that carry most of the gap to the chosen comparison, and the net variance of the others.
 	measure 'Headline Regions' =
 			VAR _delta = [ΔCMP]
 			VAR _items = SELECTCOLUMNS ( VALUES ( 'Store'[Country] ), "@name", 'Store'[Country], "@delta", [ΔCMP] )
@@ -510,9 +528,10 @@ table Sales
 			        )
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: be1b72f1-f547-4acd-b0ef-099fc4882005
 
-	/// Margin page headline: gross margin vs last year and the bridge effects that explain it (there is no margin budget, so the page always compares with PY and says so when BU or FC is chosen). Follows the Channel and Country slicers and clicks. Text.
+	/// Report only: Margin page headline: gross margin vs last year and the bridge effects that explain it (there is no margin budget, so the page always compares with PY and says so when BU or FC is...
 	measure 'Headline Margin' =
 			VAR _subject = SUBSTITUTE ( SUBSTITUTE ( [Headline Subject], "Sales", "Margin" ), "sales", "margin" )
 			VAR _change = [Gross Margin ΔPY]
@@ -559,9 +578,10 @@ table Sales
 			        )
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: c2d27b94-144d-402b-92ec-fdff9ef976f6
 
-	/// Outlook page headline: what the June forecast (6+6) expected for H2 vs last year, what H2 delivered, and how the year closed vs the chosen comparison. Follows the Channel and Country slicers, clicks and Compare with. Text.
+	/// Report only: Outlook page headline: what the June forecast (6+6) expected for H2 vs last year, what H2 delivered, and how the year closed vs the chosen comparison.
 	measure 'Headline Outlook' =
 			VAR _actualH2 = CALCULATE ( [AC], 'Date'[Month Number] >= 7 )
 			VAR _forecastH2 = CALCULATE ( [FC], 'Date'[Month Number] >= 7 )
@@ -581,9 +601,10 @@ table Sales
 			            & ", and the year " & FORMAT ( ABS ( _pct ), "0.0%" ) & IF ( _pct < 0, " below ", " above " ) & [Comparison Name]
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: dbc84f79-73c6-4364-819b-e1258ec41364
 
-	/// Grey line under each page headline: period, currency, scenario key and the active Channel, Country and Category filters. Text.
+	/// Report only: Grey line under each page headline: period, currency, scenario key and the active Channel, Country and Category filters. Text.
 	measure Subtitle =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _channel = IF ( ISFILTERED ( 'Store'[Channel] ), "Channel: " & CONCATENATEX ( VALUES ( 'Store'[Channel] ), 'Store'[Channel], ", ", 'Store'[Channel], ASC ) )
@@ -594,24 +615,28 @@ table Sales
 			    "Full year " & _year & " · USD · AC actual, PY " & ( _year - 1 ) & ", BU Budget " & _year & ", FC Forecast 6+6 · "
 			        & IF ( _scope = "", "All channels and countries", _scope )
 		displayFolder: Report text
+		isHidden
 		lineageTag: e151b197-5c4e-414e-aee4-2a74236d7fdc
 
-	/// Subtitle for the Products page: the standard subtitle plus a note that units, price and cost compare with PY. Text.
+	/// Report only: Subtitle for the Products page: the standard subtitle plus a note that units, price and cost compare with PY. Text.
 	measure 'Subtitle Products' = [Subtitle] & " · Units, price and cost vs PY (the plan has no units)"
 		displayFolder: Report text
+		isHidden
 		lineageTag: c2b9c187-4641-46a1-ac77-c275cf118223
 
-	/// Subtitle for the Margin page: the standard subtitle plus a note that margin compares with PY. Text.
+	/// Report only: Subtitle for the Margin page: the standard subtitle plus a note that margin compares with PY. Text.
 	measure 'Subtitle Margin' = [Subtitle] & " · Margin vs PY (no margin budget)"
 		displayFolder: Report text
+		isHidden
 		lineageTag: 5c7b40ab-f83b-48fe-a190-bc6f543eea74
 
-	/// Subtitle for the Outlook page: the standard subtitle plus what FC 6+6 means. Text.
+	/// Report only: Subtitle for the Outlook page: the standard subtitle plus what FC 6+6 means. Text.
 	measure 'Subtitle Outlook' = [Subtitle] & " · FC 6+6: Jan–Jun actuals, Jul–Dec forecast made in June"
 		displayFolder: Report text
+		isHidden
 		lineageTag: 7b5cc389-28c8-4d9b-bcc0-e5bc03bff8b0
 
-	/// Name of the hovered item on the tooltip page: category, country or channel. Text.
+	/// Report only: Name of the hovered item on the tooltip page: category, country or channel. Text.
 	measure 'Tooltip Title' =
 			VAR _category = IF ( ISFILTERED ( 'Product'[Category] ), SELECTEDVALUE ( 'Product'[Category] ) )
 			VAR _country = IF ( ISFILTERED ( 'Store'[Country] ), SELECTEDVALUE ( 'Store'[Country] ) )
@@ -619,9 +644,10 @@ table Sales
 			RETURN
 			    COALESCE ( _category, _country, _channel, "All sales" )
 		displayFolder: Report text
+		isHidden
 		lineageTag: e8001704-8d09-4d5b-9b24-8273ad30eb19
 
-	/// One-line summary on the tooltip page: AC and the variance vs the chosen comparison, e.g. AC $106.0M · ΔBU −$18.4M (−14.8%) · 2025. Text.
+	/// Report only: One-line summary on the tooltip page: AC and the variance vs the chosen comparison, e.g. AC $106.0M · ΔBU −$18.4M (−14.8%) · 2025. Text.
 	measure 'Tooltip Summary' =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _actual = [AC]
@@ -635,74 +661,88 @@ table Sales
 			            & " · " & _year
 			    )
 		displayFolder: Report text
+		isHidden
 		lineageTag: 2bf95ef7-2524-4b72-ab47-61a186b71866
 
-	/// Text for a dynamic report title that follows the Compare with slicer: the variance code, e.g. ΔBU.
+	/// Report only: Text for a dynamic report title that follows the Compare with slicer: the variance code, e.g. ΔBU.
 	measure 'Title KPI Δ' = "Δ" & [Comparison Label]
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 6f22d1c7-4d8a-4388-a619-42d077d0a181
 
-	/// Text for a dynamic report title that follows the Compare with slicer: the relative variance code, e.g. ΔBU %.
+	/// Report only: Text for a dynamic report title that follows the Compare with slicer: the relative variance code, e.g. ΔBU %.
 	measure 'Title KPI Δ %' = "Δ" & [Comparison Label] & " %"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 0e252047-89ed-4e7d-8801-81709b39e7c4
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by channel.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by channel.
 	measure 'Title Δ by channel' = "Sales | USD m | Δ" & [Comparison Label] & " | by channel"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 6d2d1c73-32cc-4a26-bcf5-9c880adc6adb
 
-	/// IBCS chart title for the second comparison, e.g. Sales | USD m | ΔPY | by channel.
+	/// Report only: IBCS chart title for the second comparison, e.g. Sales | USD m | ΔPY | by channel.
 	measure 'Title Δ2 by channel' = "Sales | USD m | Δ" & [CMP2 Label] & " | by channel"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 9c9996dd-b7a5-4d9d-92ef-68a999397494
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by country.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by country.
 	measure 'Title Δ by country' = "Sales | USD m | Δ" & [Comparison Label] & " | by country"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 180f1c57-040b-4d88-925d-4619d2cfaee7
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by country.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by country.
 	measure 'Title Δ % by country' = "Sales | % | Δ" & [Comparison Label] & " % | by country"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 925b1727-c12a-4121-a2cc-d8b83477d7b5
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by product category.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | by product category.
 	measure 'Title Δ by category' = "Sales | USD m | Δ" & [Comparison Label] & " | by product category"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 7c9e9c6a-da4a-4f9f-ac43-389294822885
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by product category.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by product category.
 	measure 'Title Δ % by category' = "Sales | % | Δ" & [Comparison Label] & " % | by product category"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: d618f604-bf84-440d-98a1-86092517d5af
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by month and channel.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | % | ΔBU % | by month and channel.
 	measure 'Title Δ % by month and channel' = "Sales | % | Δ" & [Comparison Label] & " % | by month and channel"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 2b730a55-0a51-4581-9c72-ebb38a69c022
 
-	/// IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | BU to AC bridge | by channel.
+	/// Report only: IBCS chart title that follows the Compare with slicer, e.g. Sales | USD m | BU to AC bridge | by channel.
 	measure 'Title channel bridge' = "Sales | USD m | " & [Comparison Label] & " to AC bridge | by channel"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 8ef07124-6b93-44cd-9a81-bf197dc7afa3
 
-	/// IBCS title for the country by product category matrix that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | country × product category.
+	/// Report only: IBCS title for the country by product category matrix that follows the Compare with slicer, e.g. Sales | USD m | ΔBU | country × product category.
 	measure 'Title category matrix' = "Sales | USD m | Δ" & [Comparison Label] & " | country × product category"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 5926ab9d-f8aa-40c2-a7c1-234877ded130
 
-	/// IBCS chart title for the focus channel of the Channels page, e.g. Online sales | USD m | ΔBU | by product category.
+	/// Report only: IBCS chart title for the focus channel of the Channels page, e.g. Online sales | USD m | ΔBU | by product category.
 	measure 'Title focus channel by category' = IF ( [Focus Channel] = "Stores", "Store", [Focus Channel] ) & " sales | USD m | Δ" & [Comparison Label] & " | by product category"
 		displayFolder: Report titles
+		isHidden
 		lineageTag: 2d71e788-16ea-45e2-ba02-bcaa4e9ec5c6
 
-	/// Title of the Products driver table, e.g. Product categories | where the gap to budget comes from | 2025.
+	/// Report only: Title of the Products driver table, e.g. Product categories | where the gap to budget comes from | 2025.
 	measure 'Title driver table' = "Product categories | where the " & IF ( [ΔCMP] < 0, "gap to ", "lead over " ) & [Comparison Name] & " comes from | " & MAX ( 'Date'[Year] )
 		displayFolder: Report titles
+		isHidden
 		lineageTag: c19ed720-ffd8-4db2-a845-ddeb5205ad4b
 
-	/// SVG KPI tile for the Overview, 376 x 132 px: AC sales in USD m, the variance vs the chosen comparison and the second comparison, and mini IBCS bars for AC and both comparisons.
+	/// Report only: SVG KPI tile for the Overview, 376 x 132 px: AC sales in USD m, the variance vs the chosen comparison and the second comparison, and mini IBCS bars for AC and both comparisons.
 	measure 'KPI Sales SVG' =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _actual = [AC]
@@ -755,10 +795,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _actual ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: a3a25208-c83e-4d5c-8124-c3a4075ecd24
 		dataCategory: ImageUrl
 
-	/// SVG KPI tile for the Overview, 376 x 132 px: AC gross margin in USD m vs last year, a note that there is no margin budget, and mini IBCS bars for AC and PY.
+	/// Report only: SVG KPI tile for the Overview, 376 x 132 px: AC gross margin in USD m vs last year, a note that there is no margin budget, and mini IBCS bars for AC and PY.
 	measure 'KPI Margin SVG' =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _actual = [Gross Margin]
@@ -800,10 +841,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _actual ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: f20ee19f-0dd8-4f93-9f5a-c543b4806acd
 		dataCategory: ImageUrl
 
-	/// SVG KPI tile for the Overview, 376 x 132 px: AC gross margin rate vs last year in pp, a note that there is no margin budget, and mini IBCS bars for AC and PY.
+	/// Report only: SVG KPI tile for the Overview, 376 x 132 px: AC gross margin rate vs last year in pp, a note that there is no margin budget, and mini IBCS bars for AC and PY.
 	measure 'KPI Margin % SVG' =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _actual = [Gross Margin %]
@@ -843,10 +885,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _actual ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: 4bf6682f-450a-4fd9-893d-73ce8231c756
 		dataCategory: ImageUrl
 
-	/// SVG KPI tile for the Overview, 376 x 132 px: the full-year forecast FC 6+6 in USD m vs budget and last year, with mini IBCS bars for FC (hatched), BU (outlined) and PY (grey).
+	/// Report only: SVG KPI tile for the Overview, 376 x 132 px: the full-year forecast FC 6+6 in USD m vs budget and last year, with mini IBCS bars for FC (hatched), BU (outlined) and PY (grey).
 	measure 'KPI FC SVG' =
 			VAR _forecast = [FC]
 			VAR _budget = [BU]
@@ -886,10 +929,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _forecast ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: b6f114b7-5e24-4e07-bd68-dafcf478e3ed
 		dataCategory: ImageUrl
 
-	/// SVG hero chart for the Overview, 1000 x 768 px: sales by month with IBCS overlapping columns (PY grey behind on the left, BU outlined or FC hatched behind on the right, AC in front, AC labelled) and a strip of red/green variance columns vs the chosen comparison beneath. Follows the Channel and Country slicers, clicks and Compare with.
+	/// Report only: SVG hero chart for the Overview, 1000 x 768 px: sales by month with IBCS overlapping columns (PY grey behind on the left, BU outlined or FC hatched behind on the right, AC in front, AC...
 	measure 'Monthly Hero SVG' =
 			VAR _code = [Comparison Label]
 			VAR _plan = IF ( _code = "FC", "FC", "BU" )
@@ -963,10 +1007,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: d13da117-338b-467a-bb85-9d9772e5739b
 		dataCategory: ImageUrl
 
-	/// SVG chart for the Channels page, 1000 x 520 px: the focus channel's sales by month (the clicked or selected channel, otherwise the one that contributes most to the variance) with IBCS overlapping columns for PY, BU or FC and AC, and a strip of variance columns vs the chosen comparison.
+	/// Report only: SVG chart for the Channels page, 1000 x 520 px: the focus channel's sales by month (the clicked or selected channel, otherwise the one that contributes most to the variance) with IBCS...
 	measure 'Focus Channel Monthly SVG' =
 			VAR _channel = [Focus Channel]
 			RETURN
@@ -1044,10 +1089,11 @@ table Sales
 			        'Store'[Channel] = _channel
 			    )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: 11b9550e-bde2-4f3c-8f31-663a8b3f4216
 		dataCategory: ImageUrl
 
-	/// SVG chart for the Outlook page, 1000 x 924 px: sales by month with PY grey behind, the June forecast FC 6+6 hatched behind for Jul-Dec, AC in front, and a strip of AC minus FC variance columns for Jul-Dec. Follows the Channel and Country slicers and clicks.
+	/// Report only: SVG chart for the Outlook page, 1000 x 924 px: sales by month with PY grey behind, the June forecast FC 6+6 hatched behind for Jul-Dec, AC in front, and a strip of AC minus FC variance...
 	measure 'Outlook Monthly SVG' =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _months =
@@ -1116,10 +1162,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: e58a430b-86d2-470e-bbac-4fb950310f43
 		dataCategory: ImageUrl
 
-	/// SVG chart for the Outlook page, 552 x 220 px: sales vs last year in % for H1 actual, H2 as forecast in June (hatched) and H2 actual. Follows the Channel and Country slicers and clicks.
+	/// Report only: SVG chart for the Outlook page, 552 x 220 px: sales vs last year in % for H1 actual, H2 as forecast in June (hatched) and H2 actual. Follows the Channel and Country slicers and clicks.
 	measure 'Outlook Pace SVG' =
 			VAR _actualH1 = CALCULATE ( [AC], 'Date'[Month Number] <= 6 )
 			VAR _previousH1 = CALCULATE ( [PY], 'Date'[Month Number] <= 6 )
@@ -1172,10 +1219,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _previousH1 ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: b4344293-912f-4894-b2f8-59b081608085
 		dataCategory: ImageUrl
 
-	/// SVG bridge for the Margin page, 1000 x 924 px: gross margin from PY (grey) to AC (dark) through the volume, product mix, price and unit cost effects (red/green). Follows the Channel and Country slicers and clicks.
+	/// Report only: SVG bridge for the Margin page, 1000 x 924 px: gross margin from PY (grey) to AC (dark) through the volume, product mix, price and unit cost effects (red/green).
 	measure 'Margin Bridge SVG' =
 			VAR _year = MAX ( 'Date'[Year] )
 			VAR _start = [Gross Margin PY]
@@ -1245,10 +1293,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _start ) && NOT ISBLANK ( _end ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: 7f482900-a398-40ea-8834-f372121f115a
 		dataCategory: ImageUrl
 
-	/// SVG mini chart for the tooltip page, 464 x 236 px: the hovered item's sales by month, AC in front of the chosen comparison (PY grey, BU outlined, FC hatched), with a strip of variance columns.
+	/// Report only: SVG mini chart for the tooltip page, 464 x 236 px: the hovered item's sales by month, AC in front of the chosen comparison (PY grey, BU outlined, FC hatched), with a strip of variance...
 	measure 'Tooltip Monthly SVG' =
 			VAR _code = [Comparison Label]
 			VAR _year = MAX ( 'Date'[Year] )
@@ -1308,10 +1357,11 @@ table Sales
 			RETURN
 			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: e95897c2-ec8a-4c24-9a29-3722c9fb9684
 		dataCategory: ImageUrl
 
-	/// SVG legend for the navy sidebar, 248 x 176 px: the IBCS notation used in the report (AC solid, FC hatched, BU outlined, PY grey, variances green/red). Static.
+	/// Report only: SVG legend for the navy sidebar, 248 x 176 px: the IBCS notation used in the report (AC solid, FC hatched, BU outlined, PY grey, variances green/red). Static.
 	measure 'IBCS Legend SVG' =
 			"data:image/svg+xml;utf8,"
 			    & "<svg xmlns='http://www.w3.org/2000/svg' width='248' height='176' viewBox='0 0 248 176'>"
@@ -1327,10 +1377,11 @@ table Sales
 			    & "<text x='40' y='139'>&%23916;  Variance +/&%238722;</text>"
 			    & "</svg>"
 		displayFolder: Report visuals
+		isHidden
 		lineageTag: 9ab48ee4-c540-43f4-bcc8-3a44e233f3fa
 		dataCategory: ImageUrl
 
-	/// Order date key yyyymmdd.
+	/// Technical: order date key yyyymmdd.
 	column 'Date Key'
 		dataType: int64
 		isHidden
@@ -1339,7 +1390,7 @@ table Sales
 		summarizeBy: none
 		sourceColumn: DateKey
 
-	/// Store identifier.
+	/// Technical: store key.
 	column 'Store Key'
 		dataType: int64
 		isHidden
@@ -1348,7 +1399,7 @@ table Sales
 		summarizeBy: none
 		sourceColumn: StoreKey
 
-	/// Product identifier.
+	/// Technical: product key.
 	column 'Product Key'
 		dataType: int64
 		isHidden
@@ -1357,7 +1408,7 @@ table Sales
 		summarizeBy: none
 		sourceColumn: ProductKey
 
-	/// Units sold.
+	/// Technical: units per row. Use the Sales Quantity measure.
 	column Quantity
 		dataType: int64
 		isHidden
@@ -1366,7 +1417,7 @@ table Sales
 		summarizeBy: sum
 		sourceColumn: Quantity
 
-	/// Quantity x net price, USD.
+	/// Technical: revenue per row, quantity x net price in USD. Use the Net Sales measure.
 	column 'Net Sales Amount'
 		dataType: decimal
 		isHidden
@@ -1375,7 +1426,7 @@ table Sales
 		summarizeBy: sum
 		sourceColumn: NetSales
 
-	/// Quantity x unit cost, USD.
+	/// Technical: COGS per row, quantity x unit cost in USD. Use the Cost measure.
 	column 'Cost Amount'
 		dataType: decimal
 		isHidden

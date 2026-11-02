@@ -1,23 +1,24 @@
+/// Calculation group: Current, MTD, QTD or YTD for any measure, up to the last date in context. Combine with Scenario, e.g. YTD + PY = last year's YTD.
 table Time
 	lineageTag: f8091df7-d498-4b20-823e-98302d880c3c
 
-	/// Period-to-date variants applied to any measure. Current = the period in context. Combine with Scenario: Scenario is applied outside Time, so PY + YTD = previous-year YTD.
+	/// Period-to-date variants applied to any measure, inside Scenario: PY + YTD = last year's YTD, ΔBU + YTD = year-to-date gap to budget.
 	calculationGroup
 		precedence: 10
 
-		/// The period in the filter context, unchanged.
+		/// The period in the filter context, unchanged (the default).
 		calculationItem Current = SELECTEDMEASURE ()
 
-		/// Month to date, up to the last date in context.
+		/// Month to date, up to the last date in context. Combine with Scenario, e.g. MTD + ΔPY.
 		calculationItem MTD = CALCULATE ( SELECTEDMEASURE (), DATESMTD ( 'Date'[Date] ) )
 
-		/// Quarter to date, up to the last date in context.
+		/// Quarter to date, up to the last date in context. Combine with Scenario, e.g. QTD + ΔBU.
 		calculationItem QTD = CALCULATE ( SELECTEDMEASURE (), DATESQTD ( 'Date'[Date] ) )
 
-		/// Year to date, up to the last date in context.
+		/// Year to date, up to the last date in context. Combine with Scenario: YTD + PY = last year's YTD, YTD + ΔBU = YTD gap to budget.
 		calculationItem YTD = CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Date'[Date] ) )
 
-	/// Pick Current, MTD, QTD or YTD. With no selection, measures show the period in context.
+	/// Pick a period for any measure: Current, MTD, QTD, YTD. Combine with Scenario: YTD + PY = last year's YTD, YTD + ΔBU = YTD gap to budget.
 	column Time
 		dataType: string
 		lineageTag: d5751c9f-e114-4d6a-bb0f-6be04342e460
@@ -25,7 +26,7 @@ table Time
 		sourceColumn: Name
 		sortByColumn: Ordinal
 
-	/// Display order of time items.
+	/// Technical: display order of the time items.
 	column Ordinal
 		dataType: int64
 		isHidden

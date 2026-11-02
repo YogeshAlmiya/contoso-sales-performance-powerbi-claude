@@ -1,8 +1,9 @@
-/// Budget (BU) and forecast (FC) net sales for 2025 in USD at month x country x product category. Import (small and static). Source: view model.FactPlan.
+/// Technical, hidden: budget and forecast revenue 2025 by month x country x category. Use the BU and FC measures or the Scenario group instead.
 table Plan
+	isHidden
 	lineageTag: 65b54d23-5d1c-4656-a7a2-6e5753f6967c
 
-	/// Planned net sales in USD for the plan versions in context (both BU and FC if none is selected, so use it through the Scenario calculation group). Blank when the filter context is below the plan grain of month x country x product category, for example by day, store, brand or working day.
+	/// Technical, hidden: planned revenue (BU and FC added up if none is chosen). Use the BU or FC measures. Blank below month x category x country.
 	measure 'Plan Sales' =
 			-- The plan is set per month x country x product category. Show it only when the
 			-- filter context covers whole months, whole countries and whole categories;
@@ -26,7 +27,7 @@ table Plan
 		displayFolder: Plan
 		lineageTag: 0177fc5a-ce4e-460e-bcbd-a71b4a1e2503
 
-	/// Plan version: 1 = BU, 2 = FC.
+	/// Technical: plan version 1 = BU, 2 = FC.
 	column 'Plan Version Key'
 		dataType: int64
 		isHidden
@@ -34,7 +35,7 @@ table Plan
 		summarizeBy: none
 		sourceColumn: PlanVersionKey
 
-	/// Plan month yyyymm.
+	/// Technical: plan month yyyymm.
 	column 'Year Month Key'
 		dataType: int64
 		isHidden
@@ -42,7 +43,7 @@ table Plan
 		summarizeBy: none
 		sourceColumn: YearMonthKey
 
-	/// Product category identifier.
+	/// Technical: product category of the plan row.
 	column 'Category Key'
 		dataType: int64
 		isHidden
@@ -50,7 +51,7 @@ table Plan
 		summarizeBy: none
 		sourceColumn: CategoryKey
 
-	/// Store country code; ONL for the online store.
+	/// Technical: store country of the plan row; ONL for the online store.
 	column 'Country Code'
 		dataType: string
 		isHidden
@@ -58,7 +59,7 @@ table Plan
 		summarizeBy: none
 		sourceColumn: CountryCode
 
-	/// Planned net sales, USD.
+	/// Technical: planned revenue in USD. Use the BU and FC measures.
 	column 'Plan Sales Amount'
 		dataType: decimal
 		isHidden

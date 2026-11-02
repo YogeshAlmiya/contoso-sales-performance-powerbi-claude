@@ -1,44 +1,46 @@
-/// Products with brand, subcategory and category, one row per product. The plan joins at Category. Source: view model.DimProduct.
+/// Products (items) with brand, subcategory and category. BU and FC exist only by category; they are blank by subcategory, brand or product.
 table Product
 	lineageTag: 229433ce-36da-4288-b062-6581152a59df
 
-	/// Product identifier; joins Sales.
+	/// Technical: product key joining Sales; key of the Product table.
 	column 'Product Key'
 		dataType: int64
 		isHidden
+		isKey
 		lineageTag: 26207bc4-2f78-4527-8a4a-5c3713507a5a
 		summarizeBy: none
 		sourceColumn: ProductKey
 
-	/// Product name. Below plan grain: budget and forecast are blank when filtered by product.
+	/// Product (item) name; label of the Product table. BU and FC are blank by product.
 	column 'Product Name'
 		dataType: string
+		isDefaultLabel
 		lineageTag: 8ea45412-9c31-4887-8697-dfa92015fd58
 		summarizeBy: none
 		sourceColumn: ProductName
 
-	/// Brand. Below plan grain: budget and forecast are blank when filtered by brand.
+	/// Brand (manufacturer) of the product. BU and FC are blank by brand.
 	column Brand
 		dataType: string
 		lineageTag: f4884716-dfd8-499f-b560-ca94cb19b129
 		summarizeBy: none
 		sourceColumn: Brand
 
-	/// Product subcategory. Below plan grain: budget and forecast are blank when filtered by subcategory.
+	/// Product subcategory. BU and FC are blank by subcategory; use Category for plan comparisons.
 	column Subcategory
 		dataType: string
 		lineageTag: 4d077d6b-915c-4a52-aa7d-2e7fcc1b4e25
 		summarizeBy: none
 		sourceColumn: Subcategory
 
-	/// Product category, the level at which budget and forecast are set (8 categories).
+	/// Product category (8 categories, e.g. Computers), the level at which budget (BU) and forecast (FC) are set.
 	column Category
 		dataType: string
 		lineageTag: 7f9403e8-2754-49bf-8c5d-a744b171f58a
 		summarizeBy: none
 		sourceColumn: Category
 
-	/// Category identifier; joins the Plan table (many-to-many).
+	/// Technical: category key joining the Plan.
 	column 'Category Key'
 		dataType: int64
 		isHidden

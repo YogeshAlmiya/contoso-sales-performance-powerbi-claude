@@ -1,9 +1,9 @@
-/// Calendar, one row per day from 2016-01-01 to 2025-12-31 (whole years of sales history). Marked as the model's date table. Source: view model.DimDate.
+/// Calendar 2016-2025, one row per day, filtering actuals and plan. Use Year, Year Month, Quarter. BU and FC exist only for 2025, by month.
 table Date
 	lineageTag: de04ec11-92bc-47d1-a880-d8f9cf455afe
 	dataCategory: Time
 
-	/// Integer date key yyyymmdd; joins Sales.
+	/// Technical: date key yyyymmdd joining Sales. Use Date instead.
 	column 'Date Key'
 		dataType: int64
 		isHidden
@@ -11,19 +11,20 @@ table Date
 		summarizeBy: none
 		sourceColumn: DateKey
 
-	/// Calendar date (order date for sales).
+	/// Calendar day (order date of the sale); key and label of the Date table. BU and FC are blank by day because the plan is monthly.
 	column Date
 		dataType: dateTime
 		isUnique
 		isKey
 		formatString: yyyy-mm-dd
+		isDefaultLabel
 		lineageTag: 010a933c-90f5-4146-9d3f-2b30954e9849
 		summarizeBy: none
 		sourceColumn: Date
 
 		annotation UnderlyingDateTimeDataType = Date
 
-	/// Calendar year. 2016 is partial (sales start 2016-05-18); 2025 is the latest complete year.
+	/// Calendar year 2016-2025. 2025 is the latest complete year and the only one with BU and FC; 2016 starts on 18 May.
 	column Year
 		dataType: int64
 		formatString: 0
@@ -31,7 +32,7 @@ table Date
 		summarizeBy: none
 		sourceColumn: Year
 
-	/// Quarter of the year, Q1 to Q4.
+	/// Quarter of the year, Q1 to Q4, without the year; use Year Quarter to keep years apart.
 	column Quarter
 		dataType: string
 		lineageTag: eae2eaf7-f44c-41cf-bca4-68f955dc1274
@@ -46,7 +47,7 @@ table Date
 		sourceColumn: YearQuarter
 		sortByColumn: 'Year Quarter Key'
 
-	/// Sort key for Year Quarter (yyyyq).
+	/// Technical: yyyyq, sorts Year Quarter.
 	column 'Year Quarter Key'
 		dataType: int64
 		isHidden
@@ -54,7 +55,7 @@ table Date
 		summarizeBy: none
 		sourceColumn: YearQuarterKey
 
-	/// Month name, Jan to Dec, without the year.
+	/// Month name Jan to Dec without the year; use Year Month to keep years apart.
 	column Month
 		dataType: string
 		lineageTag: e9c3a4a3-bba1-4b3c-86b8-d8dba89b4075
@@ -62,7 +63,7 @@ table Date
 		sourceColumn: Month
 		sortByColumn: 'Month Number'
 
-	/// Month of the year, 1 to 12; sorts Month.
+	/// Technical: month 1 to 12, sorts Month.
 	column 'Month Number'
 		dataType: int64
 		isHidden
@@ -70,7 +71,7 @@ table Date
 		summarizeBy: none
 		sourceColumn: MonthNumber
 
-	/// Year and month, for example Jan 2025. The plan (budget, forecast) is set at this grain.
+	/// Year and month, for example Jan 2025. The finest grain of budget (BU) and forecast (FC).
 	column 'Year Month'
 		dataType: string
 		lineageTag: 7596bafc-fc88-46e7-8ab2-e9554b0e43f2
@@ -78,7 +79,7 @@ table Date
 		sourceColumn: YearMonth
 		sortByColumn: 'Year Month Key'
 
-	/// Month key yyyymm; sorts Year Month and joins the Plan table (many-to-many).
+	/// Technical: yyyymm, sorts Year Month and joins the Plan.
 	column 'Year Month Key'
 		dataType: int64
 		isHidden
@@ -86,7 +87,7 @@ table Date
 		summarizeBy: none
 		sourceColumn: YearMonthKey
 
-	/// Short weekday name, Sun to Sat.
+	/// Weekday name, Sun to Sat. BU and FC are blank by weekday.
 	column 'Day of Week'
 		dataType: string
 		lineageTag: 401b7662-e6d2-4160-898b-9f3898e56afa
@@ -94,7 +95,7 @@ table Date
 		sourceColumn: DayOfWeek
 		sortByColumn: 'Day of Week Number'
 
-	/// Weekday number, 1 = Sunday; sorts Day of Week.
+	/// Technical: weekday 1 = Sunday, sorts Day of Week.
 	column 'Day of Week Number'
 		dataType: int64
 		isHidden
@@ -102,7 +103,7 @@ table Date
 		summarizeBy: none
 		sourceColumn: DayOfWeekNumber
 
-	/// Yes on working days, No on weekends and holidays. Filtering it hides the plan, which is monthly.
+	/// Yes on working days, No on weekends and holidays. BU and FC are blank when filtered by it (the plan is monthly).
 	column 'Working Day'
 		dataType: string
 		lineageTag: acb0535d-e084-46a6-8ed9-8e954f175f9f

@@ -1,17 +1,18 @@
-/// Plan versions (IBCS scenarios): BU = Budget, FC = Forecast (Jan-Jun actuals, Jul-Dec reforecast). Hidden: the Scenario calculation group selects versions. Source: view model.PlanVersion.
+/// Technical, hidden: the plan versions BU and FC of the Plan table. Use the BU and FC measures or the Scenario group instead.
 table 'Plan Version'
 	isHidden
 	lineageTag: 55a5f6d4-02ed-4b6a-8251-ea8eda31d878
 
-	/// Plan version identifier.
+	/// Technical: plan version 1 = BU, 2 = FC.
 	column 'Plan Version Key'
 		dataType: int64
 		isHidden
+		isKey
 		lineageTag: b49ff169-af7c-410e-b3cd-08b5e9373711
 		summarizeBy: none
 		sourceColumn: PlanVersionKey
 
-	/// IBCS scenario code, BU or FC.
+	/// Technical: plan version code BU or FC. Use the BU and FC measures instead.
 	column Scenario
 		dataType: string
 		lineageTag: 1e1d905c-bb4b-47c4-8143-a3c638e164f7
@@ -19,15 +20,16 @@ table 'Plan Version'
 		sourceColumn: Scenario
 		sortByColumn: 'Sort Order'
 
-	/// Budget or Forecast.
+	/// Technical: Budget or Forecast.
 	column 'Scenario Name'
 		dataType: string
+		isDefaultLabel
 		lineageTag: 0eae8c08-1385-4403-91f2-d0d0bc68c873
 		summarizeBy: none
 		sourceColumn: ScenarioName
 		sortByColumn: 'Sort Order'
 
-	/// IBCS scenario order: AC 1, PY 2, BU 3, FC 4.
+	/// Technical: scenario order AC 1, PY 2, BU 3, FC 4.
 	column 'Sort Order'
 		dataType: int64
 		isHidden

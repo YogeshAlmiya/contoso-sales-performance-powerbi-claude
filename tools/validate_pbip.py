@@ -24,6 +24,9 @@ Checks the TMDL in <Name>.SemanticModel/definition without Power BI Desktop:
   - measures: format string, description and display folder (project convention)
   - report tooltips: a tooltip page is flagged as one (page type, binding, hidden, tooltip size), and every
     native chart, table and matrix by category, country or channel uses it as its report-page tooltip
+  - AI readiness: descriptions of at most 200 characters on every table, calculation group and item, column
+    and measure; report-only measures hidden and described "Report only"; a key and a default label column on
+    each dimension; en-US synonyms valid JSON, bound to existing objects, and no synonym on two objects
 Exit code 1 if any check fails.
 """
 
@@ -219,6 +222,93 @@ def check_tooltips(report_dir: Path) -> None:
                   f"REPORT visual {where}: uses the report-page tooltip")
 
 
+# --- AI readiness (Copilot reads only the first 200 characters of a description) -------------------
+
+AI_DESCRIPTION_MAX = 200
+REPORT_ONLY_FOLDERS = {"Report titles", "Report text", "Report visuals", "Comparison"}
+DIMENSIONS = {"Date", "Product", "Store", "Plan Version", "Comparison"}
+
+
+def check_ai_readiness(defn: Path) -> None:
+    objects: dict[tuple[str, str], set[str]] = {}  # table -> visible and hidden field names
+    for p in sorted((defn / "tables").glob("*.tmdl")):
+        lines = p.read_text(encoding="utf-8-sig").split("\n")
+        table = parse_name(next(l for l in lines if l.startswith("table "))[6:])[0]
+        fields: set[str] = set()
+        keys, labels = [], []
+        for i, line in enumerate(lines):
+            # object declarations only, not hierarchy level properties such as "column: Year"
+            m = re.match(r"^(\t*)(table|calculationGroup|calculationItem|column|measure)(?: (.*))?$", line)
+            if not m:
+                continue
+            indent, kind, rest = m.groups()
+            rest = rest or ""
+            name = table if kind in ("table", "calculationGroup") else parse_name(rest.split(" =")[0].strip())[0]
+            doc = []
+            j = i - 1
+            while j >= 0 and lines[j].startswith(indent + "///"):
+                doc.insert(0, lines[j][len(indent) + 4:])
+                j -= 1
+            text = " ".join(doc)
+            what = f"{kind.upper()} {table}" + ("" if kind in ("table", "calculationGroup") else f"[{name}]")
+            check(bool(text), f"AI {what}: has a description")
+            check(len(text) <= AI_DESCRIPTION_MAX, f"AI {what}: description at most {AI_DESCRIPTION_MAX} characters", str(len(text)))
+            if kind not in ("column", "measure"):
+                continue
+            fields.add(name)
+            props = []
+            k = i + 1
+            while k < len(lines) and (lines[k].startswith(indent + "\t") or not lines[k].strip()):
+                if lines[k].startswith(indent + "\t") and not lines[k].startswith(indent + "\t\t"):
+                    props.append(lines[k].strip())
+                if not lines[k].strip() and k + 1 < len(lines) and not lines[k + 1].startswith(indent + "\t"):
+                    break
+                k += 1
+            hidden = "isHidden" in props
+            folder = next((x.split(":", 1)[1].strip() for x in props if x.startswith("displayFolder:")), None)
+            if kind == "measure":
+                report_only = text.startswith("Report only")
+                if folder in REPORT_ONLY_FOLDERS:
+                    check(report_only, f"AI {what}: report-helper measure described as Report only")
+                if report_only:
+                    check(hidden, f"AI {what}: Report only measure is hidden")
+            if "isKey" in props:
+                keys.append(name)
+            if "isDefaultLabel" in props:
+                labels.append(name)
+        objects[table] = fields
+        if table in DIMENSIONS:
+            check(len(keys) == 1, f"AI TABLE {table}: one key column", ", ".join(keys))
+            check(len(labels) == 1, f"AI TABLE {table}: one default label column", ", ".join(labels))
+
+    culture = defn / "cultures" / "en-US.tmdl"
+    check(culture.exists(), "AI en-US culture file exists")
+    if not culture.exists():
+        return
+    text = culture.read_text(encoding="utf-8-sig")
+    start, end = text.find("{"), text.rfind("}") + 1
+    try:
+        meta = json.loads("\n".join(l.strip("\t") for l in text[start:end].split("\n")))
+    except json.JSONDecodeError as e:
+        check(False, "AI en-US linguistic metadata is valid JSON", str(e))
+        return
+    check(meta.get("Language") == "en-US", "AI linguistic metadata language is en-US", str(meta.get("Language")))
+    owner: dict[str, str] = {}
+    for key, entity in meta.get("Entities", {}).items():
+        binding = entity.get("Definition", {}).get("Binding", {})
+        table, field = binding.get("ConceptualEntity"), binding.get("ConceptualProperty")
+        target = table + (f"[{field}]" if field else "")
+        check(table in objects and (field is None or field in objects[table]), f"AI synonym entity {key}: bound to an existing object", target)
+        for term_entry in entity.get("Terms", []):
+            for term, info in term_entry.items():
+                # authored terms only; Desktop adds Generated and Suggested ones when it saves
+                if info.get("State", "Authored") != "Authored":
+                    continue
+                t = term.strip().lower()
+                check(t == term and t != "", f"AI synonym '{term}' on {target}: lower case, no surrounding spaces")
+                check(owner.setdefault(t, target) == target, f"AI synonym '{t}': on one object only", f"{owner[t]} and {target}")
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # rule names contain Δ; the Windows console default (cp1252) cannot print it
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
@@ -394,6 +484,7 @@ def main() -> None:
             check(tname in related, f"TABLE {tname}: has a relationship")
 
     check_tooltips(report_dir)
+    check_ai_readiness(defn)
 
     print(f"{len(passes)} checks passed, {len(failures)} failed")
     for f in failures:
