@@ -96,3 +96,20 @@ UNION ALL SELECT N'Category = Computers', CAST(SUM(SalesAmountUSD) AS decimal(19
 UNION ALL SELECT N'Channel = Online / Country Code = ONL', CAST(SUM(SalesAmountUSD) AS decimal(19,2)) FROM model.PlanSales WHERE Scenario = N'BU' AND CountryCode = N'ONL'
 UNION ALL SELECT N'Month = Mar 2025', CAST(SUM(SalesAmountUSD) AS decimal(19,2)) FROM model.PlanSales WHERE Scenario = N'BU' AND YearMonthKey = 202503;
 GO
+
+-- T8  Comparison switch: CMP, ΔCMP, ΔCMP % for 2025 per comparison (nothing selected = PY)
+WITH t AS (
+    SELECT (SELECT SUM(Quantity * NetPrice) FROM Data.Sales WHERE OrderDate >= '2025-01-01' AND OrderDate < '2026-01-01') AC,
+           (SELECT SUM(Quantity * NetPrice) FROM Data.Sales WHERE OrderDate >= '2024-01-01' AND OrderDate < '2025-01-01') PY,
+           (SELECT SUM(SalesAmountUSD) FROM model.PlanSales WHERE Scenario = N'BU') BU,
+           (SELECT SUM(SalesAmountUSD) FROM model.PlanSales WHERE Scenario = N'FC') FC
+), c AS (
+    SELECT N'(none selected)' Comparison, 0 o, PY CMP, AC FROM t
+    UNION ALL SELECT N'PY', 1, PY, AC FROM t
+    UNION ALL SELECT N'BU', 2, BU, AC FROM t
+    UNION ALL SELECT N'FC', 3, FC, AC FROM t
+)
+SELECT Comparison, CAST(CMP AS decimal(19,2)) CMP, CAST(AC - CMP AS decimal(19,2)) [ΔCMP],
+       CAST(100 * (AC - CMP) / CMP AS decimal(9,2)) [ΔCMP% (pct)]
+FROM c ORDER BY o;
+GO

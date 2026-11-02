@@ -1,0 +1,37 @@
+/// Scenarios AC can be compared with (PY, BU, FC), for the report's "Compare with" slicer. No relationships: the Comparison measures read the selected code, PY when nothing is selected. Source: view model.Comparison.
+table Comparison
+	lineageTag: 8fdefa5f-8b96-4c58-81e9-c6f7446e9dbe
+
+	/// IBCS scenario code: PY, BU or FC.
+	column Comparison
+		dataType: string
+		lineageTag: 673b8450-7fb4-4d4e-9671-b37ac4f06485
+		summarizeBy: none
+		sourceColumn: Comparison
+		sortByColumn: 'Sort Order'
+
+	/// Previous year, Budget or Forecast.
+	column 'Comparison Name'
+		dataType: string
+		lineageTag: 4d1a17b5-170c-46ec-b30c-bb7fad41bc2e
+		summarizeBy: none
+		sourceColumn: ComparisonName
+		sortByColumn: 'Sort Order'
+
+	/// Slicer order: PY 1, BU 2, FC 3.
+	column 'Sort Order'
+		dataType: int64
+		isHidden
+		lineageTag: 2c7d6b1e-9f04-4a8e-b3d2-5e61c8a0f7d9
+		summarizeBy: none
+		sourceColumn: SortOrder
+
+	partition Comparison = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(Server, Database),
+				    View = Source{[Schema = "model", Item = "Comparison"]}[Data]
+				in
+				    View
+

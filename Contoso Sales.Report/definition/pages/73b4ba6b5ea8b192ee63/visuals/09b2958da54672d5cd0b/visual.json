@@ -5,8 +5,8 @@
     "x": 32,
     "y": 20,
     "z": 100,
-    "height": 48,
-    "width": 1400,
+    "height": 44,
+    "width": 1856,
     "tabOrder": 100
   },
   "visual": {
@@ -22,7 +22,7 @@
                     "value": "2025 sales of $299.9M: 8% below last year and 14% below budget, but 2% ahead of the latest forecast",
                     "textStyle": {
                       "fontFamily": "Segoe UI Semibold",
-                      "fontSize": "22pt",
+                      "fontSize": "24pt",
                       "color": "#252423"
                     }
                   }

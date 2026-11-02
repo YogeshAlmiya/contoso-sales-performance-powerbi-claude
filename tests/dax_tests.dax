@@ -1,6 +1,6 @@
 // Contoso Sales: key measure tests.
 // Run one test at a time in Power BI Desktop > DAX query view: select the block and press Run.
-// Each test has a matching SQL query in tests/sql_expected.sql that computes the same numbers from Data.*.
+// Each test has a matching SQL query in tests/sql_expected.sql that computes the same numbers from Data.* (T8b checks the SVG images, so it has none).
 
 // ---------------------------------------------------------------------------
 // T1  AC 2025 by country (ONL = online store). SQL total: 299,946,187.09
@@ -105,3 +105,52 @@ EVALUATE
     ( "Date = 2025-03-15 (blank)", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Date] = DATE ( 2025, 3, 15 ) ) ),
     ( "Working Day = Yes (blank)", CALCULATE ( [Net Sales], 'Scenario'[Scenario] = "BU", 'Date'[Year] = 2025, 'Date'[Working Day] = "Yes" ) )
 }
+
+// ---------------------------------------------------------------------------
+// T8  Comparison switch (Compare with slicer), 2025. Expected: CMP, ΔCMP and ΔCMP % equal
+//     PY, BU or FC and their variances; with nothing selected they equal PY.
+//     SQL: PY 325,037,485.19, BU 349,547,870.51, FC 292,773,870.73 (see T4 totals)
+// ---------------------------------------------------------------------------
+EVALUATE
+UNION (
+    ROW (
+        "Comparison", "(none selected)",
+        "CMP", CALCULATE ( [CMP], 'Date'[Year] = 2025 ),
+        "ΔCMP", CALCULATE ( [ΔCMP], 'Date'[Year] = 2025 ),
+        "ΔCMP %", CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025 ),
+        "Scenario measure", CALCULATE ( [PY], 'Date'[Year] = 2025 )
+    ),
+    SELECTCOLUMNS (
+        { "PY", "BU", "FC" },
+        "Comparison", [Value],
+        "CMP", VAR _c = [Value] RETURN CALCULATE ( [CMP], 'Date'[Year] = 2025, TREATAS ( { _c }, 'Comparison'[Comparison] ) ),
+        "ΔCMP", VAR _c = [Value] RETURN CALCULATE ( [ΔCMP], 'Date'[Year] = 2025, TREATAS ( { _c }, 'Comparison'[Comparison] ) ),
+        "ΔCMP %", VAR _c = [Value] RETURN CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025, TREATAS ( { _c }, 'Comparison'[Comparison] ) ),
+        "Scenario measure", VAR _c = [Value] RETURN CALCULATE ( SWITCH ( _c, "BU", [BU], "FC", [FC], [PY] ), 'Date'[Year] = 2025 )
+    )
+)
+
+// ---------------------------------------------------------------------------
+// T8b SVG hero measures return an SVG image under slicer filters. Expected: every row starts
+//     with data:image/svg+xml and has a length > 0; the Channel image shows only Stores for Germany.
+// ---------------------------------------------------------------------------
+EVALUATE
+VAR _cases =
+    {
+        ( "Monthly, PY, no filter", CALCULATE ( [Monthly Hero SVG] ) ),
+        ( "Monthly, BU, Online", CALCULATE ( [Monthly Hero SVG], 'Comparison'[Comparison] = "BU", 'Store'[Channel] = "Online" ) ),
+        ( "Monthly, FC, Germany", CALCULATE ( [Monthly Hero SVG], 'Comparison'[Comparison] = "FC", 'Store'[Country] = "Germany" ) ),
+        ( "Channel, PY, no filter", CALCULATE ( [Channel Hero SVG] ) ),
+        ( "Channel, BU, Online", CALCULATE ( [Channel Hero SVG], 'Comparison'[Comparison] = "BU", 'Store'[Channel] = "Online" ) ),
+        ( "Channel, FC, Germany", CALCULATE ( [Channel Hero SVG], 'Comparison'[Comparison] = "FC", 'Store'[Country] = "Germany" ) )
+    }
+RETURN
+    SELECTCOLUMNS (
+        _cases,
+        "Case", [Value1],
+        "Is SVG", LEFT ( [Value2], 18 ) = "data:image/svg+xml",
+        "Length", LEN ( [Value2] ),
+        "Shows Online", CONTAINSSTRING ( [Value2], ">Online<" ),
+        "Shows Stores", CONTAINSSTRING ( [Value2], ">Stores<" ),
+        "Shows Total", CONTAINSSTRING ( [Value2], ">Total<" )
+    )

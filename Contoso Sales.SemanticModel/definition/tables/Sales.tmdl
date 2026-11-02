@@ -128,6 +128,282 @@ table Sales
 		lineageTag: 8fda3cf2-b33c-42a9-8e2e-b552bc798a2b
 		dataCategory: ImageUrl
 
+	/// Comparison chosen in the report's Compare with slicer: PY, BU or FC. PY when nothing or more than one is selected. Text, used by the comparison measures and dynamic titles.
+	measure 'Comparison Label' = SELECTEDVALUE ( 'Comparison'[Comparison], "PY" )
+		displayFolder: Report titles
+		lineageTag: da588170-5a71-4375-a61a-4e831e14fd93
+
+	/// Net sales of the comparison chosen in the Compare with slicer: PY, BU or FC (PY by default). Same values as the PY, BU and FC measures.
+	measure CMP = SWITCH ( [Comparison Label], "BU", [BU], "FC", [FC], [PY] )
+		formatString: \$#,##0
+		displayFolder: Comparison
+		lineageTag: 0d22ef29-29df-4c9b-815e-8b390ff11229
+
+	/// AC minus the comparison chosen in the Compare with slicer: ΔPY, ΔBU or ΔFC (ΔPY by default).
+	measure ΔCMP = SWITCH ( [Comparison Label], "BU", [ΔBU], "FC", [ΔFC], [ΔPY] )
+		formatString: +\$#,##0;-\$#,##0;\$0
+		displayFolder: Comparison
+		lineageTag: 107fd6f5-2396-4251-a2e6-09342695ff85
+
+	/// AC vs the comparison chosen in the Compare with slicer, in %: ΔPY %, ΔBU % or ΔFC % (ΔPY % by default).
+	measure 'ΔCMP %' = SWITCH ( [Comparison Label], "BU", [ΔBU %], "FC", [ΔFC %], [ΔPY %] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Comparison
+		lineageTag: b4a78004-15bf-41fc-b630-3aeb5829ec94
+
+	/// Text for a dynamic report title that follows the Compare with slicer. KPI card title for ΔCMP, e.g. ΔBU.
+	measure 'Title KPI Δ' = "Δ" & [Comparison Label]
+		displayFolder: Report titles
+		lineageTag: 6f22d1c7-4d8a-4388-a619-42d077d0a181
+
+	/// Text for a dynamic report title that follows the Compare with slicer. KPI card title for ΔCMP %, e.g. ΔBU %.
+	measure 'Title KPI Δ %' = "Δ" & [Comparison Label] & " %"
+		displayFolder: Report titles
+		lineageTag: 0e252047-89ed-4e7d-8801-81709b39e7c4
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU by channel, $M.
+	measure 'Title Δ by channel' = "Δ" & [Comparison Label] & " by channel, $M"
+		displayFolder: Report titles
+		lineageTag: 6d2d1c73-32cc-4a26-bcf5-9c880adc6adb
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU by country, $M.
+	measure 'Title Δ by country' = "Δ" & [Comparison Label] & " by country, $M"
+		displayFolder: Report titles
+		lineageTag: 180f1c57-040b-4d88-925d-4619d2cfaee7
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU % by country.
+	measure 'Title Δ % by country' = "Δ" & [Comparison Label] & " % by country"
+		displayFolder: Report titles
+		lineageTag: 925b1727-c12a-4121-a2cc-d8b83477d7b5
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU by category, $M.
+	measure 'Title Δ by category' = "Δ" & [Comparison Label] & " by category, $M"
+		displayFolder: Report titles
+		lineageTag: 7c9e9c6a-da4a-4f9f-ac43-389294822885
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU % by category.
+	measure 'Title Δ % by category' = "Δ" & [Comparison Label] & " % by category"
+		displayFolder: Report titles
+		lineageTag: d618f604-bf84-440d-98a1-86092517d5af
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. ΔBU % by month and channel.
+	measure 'Title Δ % by month and channel' = "Δ" & [Comparison Label] & " % by month and channel"
+		displayFolder: Report titles
+		lineageTag: 2b730a55-0a51-4581-9c72-ebb38a69c022
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. Change vs budget by channel, $M (ΔBU).
+	measure 'Title channel bridge' = "Change vs " & SWITCH ( [Comparison Label], "BU", "budget", "FC", "forecast", "last year" ) & " by channel, $M (Δ" & [Comparison Label] & ")"
+		displayFolder: Report titles
+		lineageTag: 8ef07124-6b93-44cd-9a81-bf197dc7afa3
+
+	/// Text for a dynamic report title that follows the Compare with slicer. Visual title, e.g. AC and ΔBU % by category and channel.
+	measure 'Title category matrix' = "AC and Δ" & [Comparison Label] & " % by category and channel"
+		displayFolder: Report titles
+		lineageTag: 5926ab9d-f8aa-40c2-a7c1-234877ded130
+
+	/// SVG image for the Overview: net sales by month for 2025, AC (solid dark grey) in front of the comparison chosen in the Compare with slicer (PY solid light grey, BU outlined, FC hatched), with red/green variance columns beneath. Follows the Channel and Country slicers. 1240 x 752 px.
+	measure 'Monthly Hero SVG' =
+			VAR _code = [Comparison Label]
+			VAR _name = SWITCH ( _code, "BU", "budget", "FC", "forecast", "last year" )
+			VAR _months =
+			    ADDCOLUMNS (
+			        CALCULATETABLE ( SUMMARIZE ( 'Date', 'Date'[Year Month Key], 'Date'[Month] ), 'Date'[Year] = 2025 ),
+			        "@ac", [AC],
+			        "@cmp", [CMP],
+			        "@d", [ΔCMP]
+			    )
+			VAR _max = MAXX ( _months, MAX ( [@ac], [@cmp] ) )
+			VAR _pos = MAX ( MAXX ( _months, [@d] ), 0 )
+			VAR _neg = MAX ( - MINX ( _months, [@d] ), 0 )
+			-- Top panel: columns stand on y = 440 and are at most 300 px tall
+			VAR _base = 440
+			VAR _k = DIVIDE ( 300, _max )
+			-- Bottom panel: variance columns within y = 556 to 706, zero line placed by the positive/negative extent
+			VAR _vTop = 556
+			VAR _vH = 150
+			VAR _zero = _vTop + IF ( _pos + _neg = 0, _vH / 2, _vH * _pos / ( _pos + _neg ) )
+			VAR _kv = DIVIDE ( _vH, _pos + _neg )
+			-- IBCS comparison style: PY solid light grey, BU outlined, FC hatched
+			VAR _cmpStyle =
+			    SWITCH (
+			        _code,
+			        "BU", "fill='white' stroke='%23404040' stroke-width='1.5'",
+			        "FC", "fill='url(%23h)' stroke='%23404040' stroke-width='1.5'",
+			        "fill='%23C8C8C8'"
+			    )
+			VAR _marks =
+			    CONCATENATEX (
+			        _months,
+			        VAR _x = 24 + ( 'Date'[Year Month Key] - 202501 ) * 100
+			        VAR _hA = [@ac] * _k
+			        VAR _hC = [@cmp] * _k
+			        VAR _d = [@d]
+			        VAR _hD = ABS ( _d ) * _kv
+			        VAR _yD = IF ( _d >= 0, _zero - _hD, _zero )
+			        VAR _yDL = IF ( _d >= 0, _zero - _hD - 7, _zero + _hD + 20 )
+			        RETURN
+			            -- comparison column offset 10 px behind AC (IBCS overlapping columns)
+			            IF (
+			                NOT ISBLANK ( [@cmp] ),
+			                "<rect x='" & ( _x + 28 ) & "' y='" & FORMAT ( _base - _hC, "0.0" ) & "' width='34' height='" & FORMAT ( _hC, "0.0" ) & "' " & _cmpStyle & "/>"
+			            )
+			            & IF (
+			                NOT ISBLANK ( [@ac] ),
+			                "<rect x='" & ( _x + 38 ) & "' y='" & FORMAT ( _base - _hA, "0.0" ) & "' width='34' height='" & FORMAT ( _hA, "0.0" ) & "' fill='%23404040'/>"
+			                    & "<text x='" & ( _x + 55 ) & "' y='" & FORMAT ( _base - MAX ( _hA, _hC ) - 8, "0.0" ) & "' class='v' text-anchor='middle'>$" & FORMAT ( [@ac] / 1e6, "0.0" ) & "M</text>"
+			            )
+			            & "<text x='" & ( _x + 50 ) & "' y='" & ( _base + 26 ) & "' class='k' text-anchor='middle'>" & 'Date'[Month] & "</text>"
+			            & IF (
+			                NOT ISBLANK ( _d ),
+			                "<rect x='" & ( _x + 30 ) & "' y='" & FORMAT ( _yD, "0.0" ) & "' width='40' height='" & FORMAT ( MAX ( _hD, 1 ), "0.0" ) & "' fill='" & IF ( _d < 0, "%23C0392B", "%232E8540" ) & "'/>"
+			                    & "<text x='" & ( _x + 50 ) & "' y='" & FORMAT ( _yDL, "0.0" ) & "' class='v' text-anchor='middle'>" & IF ( _d > 0, "+", IF ( _d < 0, "-", "" ) ) & "$" & FORMAT ( ABS ( _d ) / 1e6, "0.0" ) & "M</text>"
+			            ),
+			        "",
+			        'Date'[Year Month Key], ASC
+			    )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='1240' height='752' viewBox='0 0 1240 752'>"
+			    & "<style>text{font-family:Segoe UI,sans-serif}.t{font-size:19px;font-weight:600;fill:%23252423}"
+			    & ".k{font-size:16px;fill:%23605E5C}.s{font-size:15px;fill:%23605E5C}.n{font-size:16px;font-weight:600;fill:%23252423}"
+			    & ".v{font-size:15px;font-weight:600;fill:%23252423;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>"
+			    & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			    & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%23404040' stroke-width='2.5'/></pattern></defs>"
+			    & "<text x='16' y='28' class='t'>Net sales by month, $M: AC vs " & _code & "</text>"
+			    & "<rect x='16' y='45' width='14' height='14' fill='%23404040'/><text x='36' y='58' class='k'>AC (actual)</text>"
+			    & "<rect x='156' y='45' width='14' height='14' " & _cmpStyle & "/><text x='176' y='58' class='k'>" & _code & " (" & _name & ")</text>"
+			    & "<line x1='16' x2='1224' y1='" & _base & "' y2='" & _base & "' stroke='%23A6A6A6'/>"
+			    & "<text x='16' y='516' class='t'>&%23916;" & _code & " by month, $M</text>"
+			    & "<line x1='16' x2='1224' y1='" & FORMAT ( _zero, "0.0" ) & "' y2='" & FORMAT ( _zero, "0.0" ) & "' stroke='%23A6A6A6'/>"
+			    & _marks
+			    & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _max ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: d13da117-338b-467a-bb85-9d9772e5739b
+		dataCategory: ImageUrl
+
+	/// SVG image for the Channel page: one row per channel and a total, with IBCS bars for PY, AC, BU and FC (hatched), and red/green variance bars in $M and % vs the comparison chosen in the Compare with slicer. Follows the Channel and Country slicers. 1144 x 512 px.
+	measure 'Channel Hero SVG' =
+			VAR _code = [Comparison Label]
+			VAR _name = SWITCH ( _code, "BU", "budget", "FC", "forecast", "last year" )
+			VAR _channels =
+			    SELECTCOLUMNS (
+			        VALUES ( 'Store'[Channel] ),
+			        "@name", 'Store'[Channel],
+			        "@order", IF ( 'Store'[Channel] = "Online", 1, 2 ),
+			        "@ac", CALCULATE ( [AC], 'Date'[Year] = 2025 ),
+			        "@py", CALCULATE ( [PY], 'Date'[Year] = 2025 ),
+			        "@bu", CALCULATE ( [BU], 'Date'[Year] = 2025 ),
+			        "@fc", CALCULATE ( [FC], 'Date'[Year] = 2025 ),
+			        "@d", CALCULATE ( [ΔCMP], 'Date'[Year] = 2025 ),
+			        "@p", CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025 )
+			    )
+			VAR _total =
+			    ROW (
+			        "@name", "Total",
+			        "@order", 3,
+			        "@ac", CALCULATE ( [AC], 'Date'[Year] = 2025 ),
+			        "@py", CALCULATE ( [PY], 'Date'[Year] = 2025 ),
+			        "@bu", CALCULATE ( [BU], 'Date'[Year] = 2025 ),
+			        "@fc", CALCULATE ( [FC], 'Date'[Year] = 2025 ),
+			        "@d", CALCULATE ( [ΔCMP], 'Date'[Year] = 2025 ),
+			        "@p", CALCULATE ( [ΔCMP %], 'Date'[Year] = 2025 )
+			    )
+			-- Total row only when more than one channel is shown
+			VAR _rows = UNION ( _channels, FILTER ( _total, COUNTROWS ( _channels ) > 1 ) )
+			VAR _rh = MIN ( 140, DIVIDE ( 420, COUNTROWS ( _rows ) ) )
+			-- Scenario bars: one scale for all rows, 300 px for the largest value
+			VAR _k = DIVIDE ( 300, MAXX ( _rows, MAX ( MAX ( [@ac], [@py] ), MAX ( [@bu], [@fc] ) ) ) )
+			-- Variance columns: zero line placed by the positive/negative extent, 70 px (60 px) left for labels on each side
+			VAR _dPos = MAX ( MAXX ( _rows, [@d] ), 0 )
+			VAR _dNeg = MAX ( - MINX ( _rows, [@d] ), 0 )
+			VAR _dZero = 650 + IF ( _dPos + _dNeg = 0, 70, 140 * _dNeg / ( _dPos + _dNeg ) )
+			VAR _dK = DIVIDE ( 140, _dPos + _dNeg )
+			VAR _pPos = MAX ( MAXX ( _rows, [@p] ), 0 )
+			VAR _pNeg = MAX ( - MINX ( _rows, [@p] ), 0 )
+			VAR _pZero = 960 + IF ( _pPos + _pNeg = 0, 60, 120 * _pNeg / ( _pPos + _pNeg ) )
+			VAR _pK = DIVIDE ( 120, _pPos + _pNeg )
+			VAR _yEnd = 80 + COUNTROWS ( _rows ) * _rh
+			VAR _marks =
+			    CONCATENATEX (
+			        _rows,
+			        VAR _o = [@order]
+			        VAR _i = COUNTROWS ( FILTER ( _rows, [@order] < _o ) )
+			        VAR _y0 = 80 + _i * _rh
+			        VAR _yb = _y0 + ( _rh - 95 ) / 2
+			        VAR _yc = _y0 + _rh / 2
+			        VAR _ac = [@ac]
+			        VAR _py = [@py]
+			        VAR _bu = [@bu]
+			        VAR _fc = [@fc]
+			        VAR _d = [@d]
+			        VAR _p = [@p]
+			        VAR _wD = MAX ( ABS ( _d ) * _dK, 1 )
+			        VAR _wP = MAX ( ABS ( _p ) * _pK, 1 )
+			        VAR _four = { ( "PY", 0, _py ), ( "AC", 1, _ac ), ( "BU", 2, _bu ), ( "FC", 3, _fc ) }
+			        VAR _bars =
+			            CONCATENATEX (
+			                _four,
+			                VAR _yy = _yb + [Value2] * 25
+			                VAR _w = [Value3] * _k
+			                -- outlined bars (BU, FC) are drawn 0.75 px inside so the 1.5 px stroke keeps the bar length
+			                VAR _rect =
+			                    SWITCH (
+			                        [Value1],
+			                        "PY", "<rect x='156' y='" & FORMAT ( _yy, "0.0" ) & "' width='" & FORMAT ( _w, "0.0" ) & "' height='20' fill='%23C8C8C8'/>",
+			                        "AC", "<rect x='156' y='" & FORMAT ( _yy, "0.0" ) & "' width='" & FORMAT ( _w, "0.0" ) & "' height='20' fill='%23404040'/>",
+			                        "<rect x='156.75' y='" & FORMAT ( _yy + 0.75, "0.0" ) & "' width='" & FORMAT ( MAX ( _w - 1.5, 0 ), "0.0" ) & "' height='18.5' fill='"
+			                            & IF ( [Value1] = "FC", "url(%23h)", "white" ) & "' stroke='%23404040' stroke-width='1.5'/>"
+			                    )
+			                RETURN
+			                    "<text x='148' y='" & FORMAT ( _yy + 15, "0.0" ) & "' class='s' text-anchor='end'>" & [Value1] & "</text>"
+			                        & IF (
+			                            NOT ISBLANK ( [Value3] ),
+			                            _rect & "<text x='" & FORMAT ( 162 + _w, "0.0" ) & "' y='" & FORMAT ( _yy + 15, "0.0" ) & "' class='v'>$" & FORMAT ( [Value3] / 1e6, "0.0" ) & "M</text>"
+			                        ),
+			                "",
+			                [Value2], ASC
+			            )
+			        RETURN
+			            IF ( _i > 0, "<line x1='16' x2='1128' y1='" & FORMAT ( _y0, "0.0" ) & "' y2='" & FORMAT ( _y0, "0.0" ) & "' stroke='" & IF ( _o = 3, "%23A6A6A6", "%23E1DFDD" ) & "'/>" )
+			            & "<text x='16' y='" & FORMAT ( _yc + 6, "0.0" ) & "' class='n'>" & [@name] & "</text>"
+			            & _bars
+			            & IF (
+			                NOT ISBLANK ( _d ),
+			                "<rect x='" & FORMAT ( IF ( _d >= 0, _dZero, _dZero - _wD ), "0.0" ) & "' y='" & FORMAT ( _yc - 16, "0.0" ) & "' width='" & FORMAT ( _wD, "0.0" ) & "' height='32' fill='" & IF ( _d < 0, "%23C0392B", "%232E8540" ) & "'/>"
+			                    & "<text x='" & FORMAT ( IF ( _d >= 0, _dZero + _wD + 6, _dZero - _wD - 6 ), "0.0" ) & "' y='" & FORMAT ( _yc + 5, "0.0" ) & "' class='v' text-anchor='" & IF ( _d >= 0, "start", "end" ) & "'>"
+			                    & IF ( _d > 0, "+", IF ( _d < 0, "-", "" ) ) & "$" & FORMAT ( ABS ( _d ) / 1e6, "0.0" ) & "M</text>"
+			            )
+			            & IF (
+			                NOT ISBLANK ( _p ),
+			                "<rect x='" & FORMAT ( IF ( _p >= 0, _pZero, _pZero - _wP ), "0.0" ) & "' y='" & FORMAT ( _yc - 16, "0.0" ) & "' width='" & FORMAT ( _wP, "0.0" ) & "' height='32' fill='" & IF ( _p < 0, "%23C0392B", "%232E8540" ) & "'/>"
+			                    & "<text x='" & FORMAT ( IF ( _p >= 0, _pZero + _wP + 6, _pZero - _wP - 6 ), "0.0" ) & "' y='" & FORMAT ( _yc + 5, "0.0" ) & "' class='v' text-anchor='" & IF ( _p >= 0, "start", "end" ) & "'>"
+			                    & IF ( _p > 0, "+", IF ( _p < 0, "-", "" ) ) & FORMAT ( ABS ( _p ) * 100, "0.0" ) & "%25</text>"
+			            ),
+			        "",
+			        [@order], ASC
+			    )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='1144' height='512' viewBox='0 0 1144 512'>"
+			    & "<style>text{font-family:Segoe UI,sans-serif}.t{font-size:19px;font-weight:600;fill:%23252423}"
+			    & ".k{font-size:16px;fill:%23605E5C}.s{font-size:15px;fill:%23605E5C}.n{font-size:16px;font-weight:600;fill:%23252423}"
+			    & ".v{font-size:15px;font-weight:600;fill:%23252423;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>"
+			    & "<defs><pattern id='h' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>"
+			    & "<rect width='6' height='6' fill='white'/><line x1='0' y1='0' x2='0' y2='6' stroke='%23404040' stroke-width='2.5'/></pattern></defs>"
+			    & "<text x='16' y='28' class='t'>Online vs Stores: net sales 2025, $M, and variance vs " & _name & "</text>"
+			    & "<text x='156' y='64' class='k'>PY, AC, BU, FC (hatched)</text>"
+			    & "<text x='720' y='64' class='k' text-anchor='middle'>&%23916;" & _code & ", $M</text>"
+			    & "<text x='1020' y='64' class='k' text-anchor='middle'>&%23916;" & _code & " %25</text>"
+			    & "<line x1='" & FORMAT ( _dZero, "0.0" ) & "' x2='" & FORMAT ( _dZero, "0.0" ) & "' y1='72' y2='" & FORMAT ( _yEnd, "0.0" ) & "' stroke='%23A6A6A6'/>"
+			    & "<line x1='" & FORMAT ( _pZero, "0.0" ) & "' x2='" & FORMAT ( _pZero, "0.0" ) & "' y1='72' y2='" & FORMAT ( _yEnd, "0.0" ) & "' stroke='%23A6A6A6'/>"
+			    & _marks
+			    & "</svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( MAXX ( _rows, [@ac] ) ), "data:image/svg+xml;utf8," & _svg )
+		displayFolder: Report visuals
+		lineageTag: db722ccf-7c63-41bd-b5df-e6a70faf5573
+		dataCategory: ImageUrl
+
 	/// Order date key yyyymmdd.
 	column 'Date Key'
 		dataType: int64

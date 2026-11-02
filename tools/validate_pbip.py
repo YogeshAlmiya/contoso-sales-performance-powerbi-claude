@@ -221,9 +221,9 @@ def main() -> None:
 
         for mname, m in t["measures"].items():
             check(mname not in cols, f"MEASURE {tname}[{mname}]: name differs from columns in its table")
-            # Image URL measures return text (an SVG data URI), so a number format does not apply
-            is_image = m["props"].get("dataCategory") == "ImageUrl"
-            for prop in ("displayFolder",) if is_image else ("formatString", "displayFolder"):
+            # Image URL measures (an SVG data URI) and report title measures return text, so a number format does not apply
+            is_text = m["props"].get("dataCategory") == "ImageUrl" or m["props"].get("displayFolder") == "Report titles"
+            for prop in ("displayFolder",) if is_text else ("formatString", "displayFolder"):
                 check(prop in m["props"], f"MEASURE {tname}[{mname}]: has {prop}")
             check(m["doc"], f"MEASURE {tname}[{mname}]: has description")
 
@@ -333,8 +333,10 @@ def main() -> None:
             dup, nulls = cur.fetchone()
             check(dup == 0 and not nulls, f"REL {r['name']}: one-side {tt}[{tc}] unique, no blanks (SQL)")
     check(all(n == 1 for n in active_pairs.values()), "REL at most one active relationship per table pair")
+    # Slicer tables read only by measures (SELECTEDVALUE) have no relationships by design
+    disconnected = {"Comparison"}
     for tname, t in tables.items():
-        if not t["calc_group"]:
+        if not t["calc_group"] and tname not in disconnected:
             check(tname in related, f"TABLE {tname}: has a relationship")
 
     print(f"{len(passes)} checks passed, {len(failures)} failed")

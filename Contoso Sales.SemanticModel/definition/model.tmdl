@@ -11,7 +11,7 @@ annotation PBI_ProTooling = ["DevMode","DaxQueryView_Desktop"]
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["Date","Product","Store","Sales","Plan","Plan Version","Server","Database"]
+annotation PBI_QueryOrder = ["Date","Product","Store","Sales","Plan","Plan Version","Comparison","Server","Database"]
 
 ref table Date
 ref table Product
@@ -21,6 +21,7 @@ ref table Plan
 ref table 'Plan Version'
 ref table Scenario
 ref table Time
+ref table Comparison
 
 ref cultureInfo en-US
 
