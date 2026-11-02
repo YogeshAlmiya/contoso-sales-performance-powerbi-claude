@@ -303,8 +303,10 @@ function scenarioBars(seed, category, measures, title, pos) {
 // The rates move within half a point, so the y-axis is shown with labels (it does not start at zero).
 // Only the last AC and PY values are labelled: two label-only series that are blank except in the last month.
 function marginRateLine(seed, title, pos) {
-  const lines = [["Gross Margin %", "AC", AC], ["Gross Margin % PY", "PY", PY]];
-  const ends = [["Gross Margin % Last Month", "AC", AC, "Above"], ["Gross Margin % PY Last Month", "PY", PY, "Under"]];
+  // Series names are not bare "AC"/"PY": Desktop turns display names into suggested synonyms, and those would
+  // send questions about AC or PY to the margin rate
+  const lines = [["Gross Margin %", "Margin AC", AC], ["Gross Margin % PY", "Margin PY", PY]];
+  const ends = [["Gross Margin % Last Month", "Margin AC", AC, "Above"], ["Gross Margin % PY Last Month", "Margin PY", PY, "Under"]];
   const sel = (m) => ({ metadata: `Sales.${m}` });
   return container(seed, "lineChart", pos, {
     query: {

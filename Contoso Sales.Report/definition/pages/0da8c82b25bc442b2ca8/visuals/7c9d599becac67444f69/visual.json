@@ -46,7 +46,7 @@
               },
               "queryRef": "Sales.Gross Margin %",
               "nativeQueryRef": "Gross Margin %",
-              "displayName": "AC"
+              "displayName": "Margin AC"
             },
             {
               "field": {
@@ -61,7 +61,7 @@
               },
               "queryRef": "Sales.Gross Margin % PY",
               "nativeQueryRef": "Gross Margin % PY",
-              "displayName": "PY"
+              "displayName": "Margin PY"
             },
             {
               "field": {
@@ -76,7 +76,7 @@
               },
               "queryRef": "Sales.Gross Margin % Last Month",
               "nativeQueryRef": "Gross Margin % Last Month",
-              "displayName": "AC"
+              "displayName": "Margin AC"
             },
             {
               "field": {
@@ -91,7 +91,7 @@
               },
               "queryRef": "Sales.Gross Margin % PY Last Month",
               "nativeQueryRef": "Gross Margin % PY Last Month",
-              "displayName": "PY"
+              "displayName": "Margin PY"
             }
           ]
         }
